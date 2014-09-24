@@ -185,6 +185,10 @@ public class Transducers {
 
 
     public static <A, B> Transducer<A, Iterable<B>> mapcat(Function<A, B> f) {
+        // need to store cat in a local var to get correct type params
+        // OR need to pass Class<T> argument to cat, i.e., cat(bType) where
+        // mapcat takes a second arg Class<B> btype that caller must provide
+        // OR need to cast and break typing
         Transducer<B, Iterable<B>> c = cat();
         return map(f).comp(c);
         // unchecked cast required to coerce Catting<Object, Iterable<Object>
