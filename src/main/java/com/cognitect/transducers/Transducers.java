@@ -2,6 +2,8 @@ package com.cognitect.transducers;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.Collection;
+
 public class Transducers {
 
     public static class Reduced<T> {
@@ -48,121 +50,44 @@ public class Transducers {
         return ret;
     }
 
-    private static class Mapping<A, B> implements Transducer<A, B> {
+    //*** Core reducing function types
 
-        Function<A, B> f;
-        Transducer<B, ?> td;
+    public static interface ReducingFunction<R, T> {
+        R apply();
+        R apply(R result);
+        R apply(R result, T input);
+    }
 
-        public Mapping(Function<A, B> f) {
-            this.f = f;
+    public static abstract class ReducingStepFunction<R, T> implements ReducingFunction<R, T> {
+        @Override
+        public R apply() {
+            return null;
         }
 
         @Override
-        public <R> ReducingFunction<R, B> apply(final ReducingFunction<R, A> xf) {
-            //??? how to apply comp?
-
-            return new ReducingFunction<R, B>() {
-                @Override
-                public R apply() {
-                    return xf.apply();
-                }
-
-                @Override
-                public R apply(R result) {
-                    return xf.apply(result);
-                }
-
-                @Override
-                public R apply(R result, B input) {
-                    return xf.apply(result, f.apply(input));
-                }
-            };
+        public R apply(R result) {
+            return result;
         }
+    }
 
+    //*** Core transducer type
+
+    public static interface Transducer<A, B> {
+        <R> ReducingFunction<R, B> apply(ReducingFunction<R, A> xf);
+
+        <C> Transducer<A, C> comp(Transducer<B, C> td);
+    }
+
+    public static abstract class AbstractTransducer<A, B> implements Transducer<A, B> {
         @Override
         public <C> Transducer<A, C> comp(Transducer<B, C> td) {
-            return new Comp<A, B, C>(this, td);
+            return compose(this, td);
         }
     }
 
-    public static <A, B> Transducer<A, B> map(Function<A, B> f) {
-        return new Mapping<A, B>(f);
-    }
+    //*** composition
 
-    private static class Filtering<A> implements Transducer<A, A> {
-        Predicate<A> p;
-
-        public Filtering(Predicate<A> p) {
-            this.p = p;
-        }
-
-        @Override
-        public <R> ReducingFunction<R, A> apply(final ReducingFunction<R, A> xf) {
-            return new ReducingFunction<R, A>() {
-                @Override
-                public R apply() {
-                    return xf.apply();
-                }
-
-                @Override
-                public R apply(R result) {
-                    return xf.apply(result);
-                }
-
-                @Override
-                public R apply(R result, A input) {
-                    if (p.test(input))
-                        return xf.apply(result, input);
-                    return result;
-                }
-            };
-        }
-
-        @Override
-        public <B> Transducer<A, B> comp(Transducer<A, B> td) {
-            //this.td = td;
-            return new Comp<A, A, B>(this, td);
-        }
-    }
-
-    public static <A> Transducer<A, A> filter(Predicate<A> p) {
-        return new Filtering<A>(p);
-    }
-
-    private static class Catting<A> implements Transducer<A, Iterable<A>> {
-
-        public Catting() {}
-
-        @Override
-        public <R> ReducingFunction<R, Iterable<A>> apply(final ReducingFunction<R, A> xf) {
-            return new ReducingFunction<R, Iterable<A>>() {
-                @Override
-                public R apply() {
-                    return xf.apply();
-                }
-
-                @Override
-                public R apply(R result) {
-                    return xf.apply(result);
-                }
-
-                @Override
-                public R apply(R result, Iterable<A> input) {
-                    return reduce(xf, result, input);
-                }
-            };
-        }
-
-        @Override
-        public <B> Transducer<A, B> comp(Transducer<Iterable<A>, B> td) {
-            //this.td = td;
-            return new Comp<A, Iterable<A>, B>(this, td);
-        }
-    }
-
-    public static <A> Transducer<A, Iterable<A>> cat() { return new Catting(); }
-
-    public static class Comp<A, B, C> implements Transducer<A, C> {
+    private static class Comp<A, B, C> extends AbstractTransducer<A, C> {
 
         private Transducer<A, B> left;
         private Transducer<B, C> right;
@@ -176,12 +101,104 @@ public class Transducers {
         public <R> ReducingFunction<R, C> apply(ReducingFunction<R, A> xf) {
             return right.apply(left.apply(xf));
         }
+    }
+
+    public static <A, B, C> Transducer<A, C> compose(Transducer<A, B> left, Transducer<B, C> right) {
+        return new Comp<A, B, C>(left, right);
+    }
+
+    //*** abstract base helper types
+
+
+    public static abstract class TransducerStepFunction<R, A, B> implements ReducingFunction<R, B> {
+
+        ReducingFunction<R, A> xf;
+
+        public TransducerStepFunction(ReducingFunction<R, A> xf) {
+            this.xf = xf;
+        }
 
         @Override
-        public <D> Transducer<A, D> comp(Transducer<C, D> td) {
-            return new Comp<A, C, D>(this, td);
+        public R apply() {
+            return xf.apply();
+        }
+
+        @Override
+        public R apply(R result) {
+            return xf.apply(result);
         }
     }
+
+    // *** transducers
+
+    private static class Mapping<A, B> extends AbstractTransducer<A, B> {
+
+        Function<A, B> f;
+
+        public Mapping(Function<A, B> f) {
+            this.f = f;
+        }
+
+        @Override
+        public <R> ReducingFunction<R, B> apply(final ReducingFunction<R, A> xf) {
+            return new TransducerStepFunction<R, A, B>(xf) {
+                @Override
+                public R apply(R result, B input) {
+                    return xf.apply(result, (f.apply(input)));
+                }
+            };
+        }
+    }
+
+    public static <A, B> Transducer<A, B> map(Function<A, B> f) {
+        return new Mapping<A, B>(f);
+    }
+
+
+
+    private static class Filtering<A> extends AbstractTransducer<A, A> {
+        Predicate<A> p;
+
+        public Filtering(Predicate<A> p) {
+            this.p = p;
+        }
+
+        @Override
+        public <R> ReducingFunction<R, A> apply(final ReducingFunction<R, A> xf) {
+            return new TransducerStepFunction<R, A, A>(xf) {
+                @Override
+                public R apply(R result, A input) {
+                    if (p.test(input))
+                        return xf.apply(result, input);
+                    return result;
+                }
+            };
+        }
+    }
+
+    public static <A> Transducer<A, A> filter(Predicate<A> p) {
+        return new Filtering<A>(p);
+    }
+
+
+
+    private static class Catting<A> extends AbstractTransducer<A, Iterable<A>> {
+
+        public Catting() {}
+
+        @Override
+        public <R> ReducingFunction<R, Iterable<A>> apply(final ReducingFunction<R, A> xf) {
+            return new TransducerStepFunction<R, A, Iterable<A>>(xf) {
+                @Override
+                public R apply(R result, Iterable<A> input) {
+                    return reduce(xf, result, input);
+                }
+            };
+        }
+    }
+
+    public static <A> Transducer<A, Iterable<A>> cat() { return new Catting(); }
+
 
 
     public static <A, B> Transducer<A, Iterable<B>> mapcat(Function<A, B> f) {
@@ -195,8 +212,26 @@ public class Transducers {
         //return map(f).comp((Transducer<B, Iterable<B>>) cat());
     }
 
+
+
+    //**** transducible processes
+
+    public static <R, A, B> R transduce(Transducer<A, B> xf, ReducingFunction<R, A> builder, Iterable<B> input) {
+        return transduce(xf, builder, builder.apply(), input);
+    }
+
     public static <R, A, B> R transduce(Transducer<A, B> xf, ReducingFunction<R, A> builder, R init, Iterable<B> input) {
         ReducingFunction<R, B> _xf = xf.apply(builder);
         return reduce(_xf, init, input);
+    }
+
+    public static <R extends Collection<A>, A, B> R into(R init, Transducer<A, B> xf, Iterable<B> input) {
+        return transduce(xf, new ReducingStepFunction<R, A>() {
+            @Override
+            public R apply(R result, A input) {
+                result.add(input);
+                return result;
+            }
+        }, init, input);
     }
 }

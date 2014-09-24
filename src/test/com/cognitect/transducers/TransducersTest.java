@@ -25,17 +25,7 @@ public class TransducersTest extends TestCase {
             }
         });
 
-        String s = transduce(xf, new ReducingFunction<String, String>() {
-            @Override
-            public String apply() {
-                return null;
-            }
-
-            @Override
-            public String apply(String result) {
-                return null;
-            }
-
+        String s = transduce(xf, new ReducingStepFunction<String, String>() {
             @Override
             public String apply(String result, String input) {
                 return result + input + " ";
@@ -54,17 +44,7 @@ public class TransducersTest extends TestCase {
             }
         });
 
-        List<Integer> odds = transduce(xf, new ReducingFunction<ArrayList<Integer>, Integer>() {
-            @Override
-            public ArrayList<Integer> apply() {
-                return null;
-            }
-
-            @Override
-            public ArrayList<Integer> apply(ArrayList<Integer> result) {
-                return result;
-            }
-
+        List<Integer> odds = transduce(xf, new ReducingStepFunction<ArrayList<Integer>, Integer>() {
             @Override
             public ArrayList<Integer> apply(ArrayList<Integer> result, Integer input) {
                 result.add(input);
@@ -85,17 +65,7 @@ public class TransducersTest extends TestCase {
             add(ints(20));
         }};
 
-        List<Integer> vals = transduce(xf, new ReducingFunction<List<Integer>, Integer>() {
-                    @Override
-                    public List<Integer> apply() {
-                        return new ArrayList<Integer>();
-                    }
-
-                    @Override
-                    public List<Integer> apply(List<Integer> result) {
-                        return result;
-                    }
-
+        List<Integer> vals = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
                     @Override
                     public List<Integer> apply(List<Integer> result, Integer input) {
                         result.add(input);
@@ -119,17 +89,7 @@ public class TransducersTest extends TestCase {
             add(ints(20));
         }};
 
-        List<Integer> vals = transduce(xf, new ReducingFunction<List<Integer>, Integer>() {
-            @Override
-            public List<Integer> apply() {
-                return new ArrayList<Integer>();
-            }
-
-            @Override
-            public List<Integer> apply(List<Integer> result) {
-                return result;
-            }
-
+        List<Integer> vals = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
             @Override
             public List<Integer> apply(List<Integer> result, Integer input) {
                 result.add(input);
