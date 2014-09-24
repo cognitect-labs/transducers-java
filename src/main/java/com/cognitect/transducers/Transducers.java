@@ -80,12 +80,12 @@ public class Transducers {
         }
 
         @Override
-        public <C> void comp(Transducer<B, C> td) {
-            this.td = td;
+        public <C> Transducer<A, C> comp(Transducer<B, C> td) {
+            return new Comp<A, B, C>(this, td);
         }
     }
 
-    static <A, B> Transducer<A, B> map(Function<A, B> f) {
+    public static <A, B> Transducer<A, B> map(Function<A, B> f) {
         return new Mapping<A, B>(f);
     }
 
@@ -119,22 +119,19 @@ public class Transducers {
         }
 
         @Override
-        public <B> void comp(Transducer<A, B> td) {
+        public <B> Transducer<A, B> comp(Transducer<A, B> td) {
             //this.td = td;
+            return new Comp<A, A, B>(this, td);
         }
     }
 
-    static <A> Transducer<A, A> filter(Predicate<A> p) {
+    public static <A> Transducer<A, A> filter(Predicate<A> p) {
         return new Filtering<A>(p);
     }
 
     private static class Catting<A> implements Transducer<A, Iterable<A>> {
 
-        Class<A> aType;
-
-        public Catting(Class<A> aType) {
-            this.aType = aType;
-        }
+        public Catting() {}
 
         @Override
         public <R> ReducingFunction<R, Iterable<A>> apply(final ReducingFunction<R, A> xf) {
@@ -151,24 +148,51 @@ public class Transducers {
 
                 @Override
                 public R apply(R result, Iterable<A> input) {
-                    return reduce(preservingReduced(xf), result, input);
+                    return reduce(xf, result, input);
                 }
             };
         }
 
         @Override
-        public <B> void comp(Transducer<Iterable<A>, B> td) {
+        public <B> Transducer<A, B> comp(Transducer<Iterable<A>, B> td) {
             //this.td = td;
+            return new Comp<A, Iterable<A>, B>(this, td);
         }
     }
 
-    public static <A> Transducer<A, Iterable<A>> cat(Class<A> aType) {
-        return new Catting<A>(aType);
+    public static <A> Transducer<A, Iterable<A>> cat() { return new Catting(); }
+
+    public static class Comp<A, B, C> implements Transducer<A, C> {
+
+        private Transducer<A, B> left;
+        private Transducer<B, C> right;
+
+        public Comp(Transducer<A, B> left, Transducer<B, C> right) {
+            this.left = left;
+            this.right = right;
+        }
+
+        @Override
+        public <R> ReducingFunction<R, C> apply(ReducingFunction<R, A> xf) {
+            return right.apply(left.apply(xf));
+        }
+
+        @Override
+        public <D> Transducer<A, D> comp(Transducer<C, D> td) {
+            return new Comp<A, C, D>(this, td);
+        }
     }
 
-    public static <A, B> Transducer<A, Iterable<B>> mapcat(Function<A, B> f, Class<B> bType) {
-        Transducer<A, B> m = map(f);
-        m.comp(cat(bType));
-        return m;
+
+    public static <A, B> Transducer<A, Iterable<B>> mapcat(Function<A, B> f) {
+        Transducer<B, Iterable<B>> c = cat();
+        return map(f).comp(c);
+        // unchecked cast required to coerce Catting<Object, Iterable<Object>
+        //return map(f).comp((Transducer<B, Iterable<B>>) cat());
+    }
+
+    public static <R, A, B> R transduce(Transducer<A, B> xf, ReducingFunction<R, A> builder, R init, Iterable<B> input) {
+        ReducingFunction<R, B> _xf = xf.apply(builder);
+        return reduce(_xf, init, input);
     }
 }
