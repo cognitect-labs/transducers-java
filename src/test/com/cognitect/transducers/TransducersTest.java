@@ -99,4 +99,34 @@ public class TransducersTest extends TestCase {
 
         System.out.println("mapcat: " + vals);
     }
+
+    public void testComp() throws Exception {
+        Transducer<Integer, Integer> f = filter(new Predicate<Integer>() {
+            @Override
+            public boolean test(Integer integer) {
+                return integer.intValue() % 2 != 0;
+            }
+        });
+
+        Transducer<String, Integer> m = map(new Function<String, Integer>() {
+            @Override
+            public String apply(Integer i) {
+                return i.toString();
+            }
+        });
+
+        Transducer<String, Integer> xf = m.comp(f);
+
+        List<String> odds = transduce(xf, new ReducingStepFunction<List<String>, String>() {
+            @Override
+            public List<String> apply(List<String> result, String input) {
+                result.add(input);
+                return null;
+            }
+        }, new ArrayList<String>(), ints(10));
+
+        for(String s : odds) {
+            System.out.println(s);
+        }
+    }
 }
