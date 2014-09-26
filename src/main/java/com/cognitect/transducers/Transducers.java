@@ -1,6 +1,9 @@
 package com.cognitect.transducers;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class Transducers {
 
@@ -113,6 +116,10 @@ public class Transducers {
 
     public static interface Function<T, R> {
         R apply(T t);
+    }
+
+    public static interface BiFunction<T, U, R> {
+        R apply(T t, U u);
     }
 
     public static <A, B> Transducer<A, B> map(final Function<B, A> f) {
@@ -278,15 +285,172 @@ public class Transducers {
         };
     }
 
+    public static <A> Transducer<A, A> replace(final Map<A, A> smap) {
+        return map(new Function<A, A>() {
+            @Override
+            public A apply(A a) {
+                if (smap.containsKey(a))
+                    return smap.get(a);
+                return a;
+            }
+        });
+    }
+
+    public static <A> Transducer<A, A> keep(final Function<A, A> f) {
+        return new ATransducer<A, A>() {
+            @Override
+            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+                return new AReducingFunctionOn<R, A, A>(xf) {
+                    @Override
+                    public R apply(R result, A input, Reduced reduced) {
+                        A _input = f.apply(input);
+                        if (_input != null)
+                            return xf.apply(result, _input, reduced);
+                        return result;
+                    }
+                };
+            }
+        };
+    }
+
+    public static <A> Transducer<A, A> keep(final BiFunction<Long, A, A> f) {
+        return new ATransducer<A, A>() {
+            @Override
+            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+                return new AReducingFunctionOn<R, A, A>(xf) {
+                    long n = 0;
+                    @Override
+                    public R apply(R result, A input, Reduced reduced) {
+                        n++;
+                        A _input = f.apply(n, input);
+                        if (_input != null)
+                            return xf.apply(result, _input, reduced);
+                        return result;
+                    }
+                };
+            }
+        };
+    }
+
+    public static <A> Transducer<A, A> dedupe() {
+        return new ATransducer<A, A>() {
+            @Override
+            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+                return new AReducingFunctionOn<R, A, A>(xf) {
+                    A prior = null;
+                    @Override
+                    public R apply(R result, A input, Reduced reduced) {
+                        R ret = result;
+                        if (prior != input) {
+                            prior = input;
+                            ret = xf.apply(result, input, reduced);
+                        }
+                        return ret;
+                    }
+                };
+            }
+        };
+    }
+
+    public static <A> Transducer<A, A> randomSample(final Double prob) {
+        return filter(new Predicate<A>() {
+            @Override
+            public boolean test(A a) {
+                return (Math.random() < prob);
+            }
+        });
+    }
+
+     public static <A, B> Transducer<Iterable<A>, A> partitionBy(final Function<A, B> f) {
+
+        return new ATransducer<Iterable<A>, A>() {
+            @Override
+            public <R> ReducingFunction<R, A> apply(final ReducingFunction<R, Iterable<A>> xf) {
+                return new ReducingFunction<R, A>() {
+                    List<A> part = new ArrayList<A>();
+                    Object mark = new Object();
+                    Object prior = mark;
+
+                    @Override
+                    public R apply() {
+                        return xf.apply();
+                    }
+
+                    @Override
+                    public R apply(R result) {
+                        R ret = result;
+                        if (!part.isEmpty()) {
+                            List<A> copy = new ArrayList<A>(part);
+                            part.clear();
+                            ret = xf.apply(result, copy, new Reduced());
+                        }
+                        return xf.apply(ret);
+                    }
+
+                    @Override
+                    public R apply(R result, A input, Reduced reduced) {
+                        Object val = f.apply(input);
+                        prior = val;
+                        if ((prior == mark) || (prior.equals(val))) {
+                            part.add(input);
+                            return result;
+                        } else {
+                            List<A> copy = new ArrayList<A>(part);
+                            part.clear();
+                            R ret = xf.apply(result, copy, reduced);
+                            if (!reduced.isReduced()) {
+                                part.add(input);
+                            }
+                            return ret;
+                        }
+                    }
+                };
+            }
+        };
+    }
+
+    public static <A, B> Transducer<Iterable<A>, A> partitionAll(final int n) {
+
+        return new ATransducer<Iterable<A>, A>() {
+            @Override
+            public <R> ReducingFunction<R, A> apply(final ReducingFunction<R, Iterable<A>> xf) {
+                return new ReducingFunction<R, A>() {
+                    List<A> part = new ArrayList<A>(n);
+
+                    @Override
+                    public R apply() {
+                        return xf.apply();
+                    }
+
+                    @Override
+                    public R apply(R result) {
+                        R ret = result;
+                        if (!part.isEmpty()) {
+                            List<A> copy = new ArrayList<A>(part);
+                            part.clear();
+                            ret = xf.apply(result, copy, new Reduced());
+                        }
+                        return xf.apply(ret);
+                    }
+
+                    @Override
+                    public R apply(R result, A input, Reduced reduced) {
+                        part.add(input);
+                        if (n == part.size()) {
+                            List<A> copy = new ArrayList<A>(part);
+                            part.clear();
+                            return xf.apply(result, copy, reduced);
+                        }
+                        return result;
+                    }
+                };
+            }
+        };
+    }
 
     /*
-replace -- HARD UNLESS RESTRICTED TO SAME TYPE
-keep
-keep-indexed
 partition-by
 partition-all
-dedupe
-random-sample
      */
 
     //**** transducible processes
