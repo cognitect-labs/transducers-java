@@ -1,10 +1,18 @@
 package com.cognitect.transducers;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.util.Collection;
 
 public class Transducers {
+
+
+    // can we get rid of local in mapcat? doesn't look like it
+    // ??? make map params match function
+    // comp works right
+    // reduced short-circuit
+    // implement take
+    // implement partition
+    // comparing / testing w/ 8
+    // cleaning up experience
 
     public static class Reduced<T> {
         T t;
@@ -17,28 +25,6 @@ public class Transducers {
 
     public static <T> boolean isReduced(T t) {
         return t instanceof Reduced;
-    }
-
-    private static <R, T> ReducingFunction<R, T> preservingReduced(final ReducingFunction<R, T> xf) {
-        return new ReducingFunction<R, T>() {
-            @Override
-            public R apply() {
-                throw new NotImplementedException();
-            }
-
-            @Override
-            public R apply(R result) {
-                throw new NotImplementedException();
-            }
-
-            @Override
-            public R apply(R result, T input) {
-                R ret = xf.apply(result, input);
-//                if (isReduced(ret))
-//                    return reduced(ret);
-                return ret;
-            }
-        };
     }
 
     private static <R, T> R reduce(ReducingFunction<R, T> f, R result, Iterable<T> input) {
@@ -76,39 +62,40 @@ public class Transducers {
 
     //*** Core transducer type
 
-    public static interface Transducer<A, B> {
-        <R> ReducingFunction<R, B> apply(ReducingFunction<R, A> xf);
+    public static interface Transducer<OUT, IN> {
+        <R> ReducingFunction<R, IN> apply(ReducingFunction<R, OUT> xf);
 
-        <C> Transducer<A, C> comp(Transducer<B, C> td);
+        <OUT2> Transducer<OUT2, IN> comp(Transducer<OUT2, OUT> right);
     }
 
-    public static abstract class AAbstractTransducer<A, B> implements Transducer<A, B> {
+    public static abstract class ATransducer<OUT, IN> implements Transducer<OUT, IN> {
         @Override
-        public <C> Transducer<A, C> comp(Transducer<B, C> td) {
-            return compose(this, td);
+        public <OUT2> Transducer<OUT2, IN> comp(Transducer<OUT2, OUT> right) {
+            return compose(this, right);
         }
     }
 
     //*** composition
 
-    private static class Comp<A, B, C> extends AAbstractTransducer<A, C> {
+    private static class Comp<OUT2, OUT, IN> extends ATransducer<OUT2, IN> {
 
-        private Transducer<A, B> left;
-        private Transducer<B, C> right;
+        private Transducer<OUT, IN> left;
+        private Transducer<OUT2, OUT> right;
 
-        public Comp(Transducer<A, B> left, Transducer<B, C> right) {
+
+        public Comp(Transducer<OUT, IN> left, Transducer<OUT2, OUT> right) {
             this.left = left;
             this.right = right;
         }
 
         @Override
-        public <R> ReducingFunction<R, C> apply(ReducingFunction<R, A> xf) {
+        public <R> ReducingFunction<R, IN> apply(ReducingFunction<R, OUT2> xf) {
             return left.apply(right.apply(xf));
         }
     }
 
-    public static <A, B, C> Transducer<A, C> compose(Transducer<A, B> left, Transducer<B, C> right) {
-        return new Comp<A, B, C>(left, right);
+    public static <OUT2, OUT, IN> Transducer<OUT2, IN> compose(Transducer<OUT, IN> left, Transducer<OUT2, OUT> right) {
+        return new Comp<OUT2, OUT, IN>(left, right);
     }
 
     //*** abstract base helper types
@@ -135,19 +122,22 @@ public class Transducers {
 
     // *** transducers
 
-    private static class Map<A, B> extends AAbstractTransducer<A, B> {
+    // Function<in, out>
+    // Map<in, out>
+    // ATransducer<out, in>
+    private static class Map<IN, OUT> extends ATransducer<OUT, IN> {
 
-        Function<B, A> f;
+        Function<IN, OUT> f;
 
-        public Map(Function<B, A> f) {
+        public Map(Function<IN, OUT> f) {
             this.f = f;
         }
 
         @Override
-        public <R> ReducingFunction<R, B> apply(final ReducingFunction<R, A> xf) {
-            return new AReducingFunctionOn<R, A, B>(xf) {
+        public <R> ReducingFunction<R, IN> apply(final ReducingFunction<R, OUT> xf) {
+            return new AReducingFunctionOn<R, OUT, IN>(xf) {
                 @Override
-                public R apply(R result, B input) {
+                public R apply(R result, IN input) {
                     System.out.println("mapping!");
                     return xf.apply(result, (f.apply(input)));
                 }
@@ -155,24 +145,24 @@ public class Transducers {
         }
     }
 
-    public static <A, B> Transducer<A, B> map(Function<B, A> f) {
-        return new Map<A, B>(f);
+    public static <OUT, IN> Transducer<OUT, IN> map(Function<IN, OUT> f) {
+        return new Map<IN, OUT>(f);
     }
 
 
 
-    private static class Filter<A> extends AAbstractTransducer<A, A> {
-        Predicate<A> p;
+    private static class Filter<IN> extends ATransducer<IN, IN> {
+        Predicate<IN> p;
 
-        public Filter(Predicate<A> p) {
+        public Filter(Predicate<IN> p) {
             this.p = p;
         }
 
         @Override
-        public <R> ReducingFunction<R, A> apply(final ReducingFunction<R, A> xf) {
-            return new AReducingFunctionOn<R, A, A>(xf) {
+        public <R> ReducingFunction<R, IN> apply(final ReducingFunction<R, IN> xf) {
+            return new AReducingFunctionOn<R, IN, IN>(xf) {
                 @Override
-                public R apply(R result, A input) {
+                public R apply(R result, IN input) {
                     System.out.println("filtering!");
                     if (p.test(input))
                         return xf.apply(result, input);
@@ -182,21 +172,21 @@ public class Transducers {
         }
     }
 
-    public static <A> Transducer<A, A> filter(Predicate<A> p) {
-        return new Filter<A>(p);
+    public static <IN> Transducer<IN, IN> filter(Predicate<IN> p) {
+        return new Filter<IN>(p);
     }
 
 
 
-    private static class Cat<A> extends AAbstractTransducer<A, Iterable<A>> {
+    private static class Cat<IN extends Iterable<OUT>, OUT> extends ATransducer<OUT, IN> {
 
         public Cat() {}
 
         @Override
-        public <R> ReducingFunction<R, Iterable<A>> apply(final ReducingFunction<R, A> xf) {
-            return new AReducingFunctionOn<R, A, Iterable<A>>(xf) {
+        public <R> ReducingFunction<R, IN> apply(final ReducingFunction<R, OUT> xf) {
+            return new AReducingFunctionOn<R, OUT, IN>(xf) {
                 @Override
-                public R apply(R result, Iterable<A> input) {
+                public R apply(R result, IN input) {
                     System.out.println("catting!");
                     return reduce(xf, result, input);
                 }
@@ -204,21 +194,27 @@ public class Transducers {
         }
     }
 
-    public static <A> Transducer<A, Iterable<A>> cat() { return new Cat(); }
+    public static <OUT, IN extends Iterable<OUT>> Transducer<OUT, IN> cat() { return new Cat<IN, OUT>(); }
 
 
-
-    public static <A, B> Transducer<A, Iterable<B>> mapcat(Function<B, A> f) {
+    public static <IN, OUT extends Iterable<OUT2>, OUT2> Transducer<OUT2, IN> mapcat(Function<IN, OUT> f) {
         // need to store cat in a local var to get correct type params
         // OR need to pass Class<T> argument to cat, i.e., cat(bType) where
         // mapcat takes a second arg Class<B> btype that caller must provide
         // OR need to cast and break typing
-        Transducer<B, Iterable<B>> c = cat();
-        return map(f).comp(c);
         // unchecked cast required to coerce Catting<Object, Iterable<Object>
         //return map(f).comp((Transducer<B, Iterable<B>>) cat());
+        Transducer<OUT, IN> m = map(f);
+        Transducer<OUT2, OUT> c = cat();
+        return m.comp(c);
     }
 
+
+    public static <IN, OUT extends Iterable<OUT2>, OUT2> Transducer<OUT2, IN> mapcat2(Function<IN, OUT> f) {
+        Transducer<OUT, IN> m = map(f);
+        Transducer<OUT2, OUT> c = cat();
+        return m.comp(c);
+    }
 
 
     //**** transducible processes

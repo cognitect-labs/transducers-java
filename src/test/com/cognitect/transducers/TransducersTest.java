@@ -18,7 +18,7 @@ public class TransducersTest extends TestCase {
     }
 
     public void testMap() throws Exception {
-        Transducer<String, Integer> xf = map(new Function<String, Integer>() {
+        Transducer<String, Integer> xf = map(new Function<Integer, String>() {
             @Override
             public String apply(Integer i) {
                 return i.toString();
@@ -77,10 +77,13 @@ public class TransducersTest extends TestCase {
     }
 
     public void testMapcat() throws Exception {
-        Transducer<Integer, Iterable<Integer>> xf = mapcat(new Function<Integer, Integer>() {
+
+
+
+        Transducer<Integer, Iterable<Integer>> xf = mapcat(new Function<Iterable<Integer>, Iterable>() {
             @Override
-            public Integer apply(Integer integer) {
-                return integer * 2;
+            public Iterable apply(Iterable<Integer> integers) {
+                return null;
             }
         });
 
@@ -108,20 +111,20 @@ public class TransducersTest extends TestCase {
             }
         });
 
-        Transducer<String, Integer> m = map(new Function<String, Integer>() {
+        Transducer<String, Integer> m = map(new Function<Integer, String>() {
             @Override
             public String apply(Integer i) {
                 return i.toString();
             }
         });
 
-        Transducer<String, Integer> xf = m.comp(f);
+        Transducer<String, Integer> xf = f.comp(m);
 
         List<String> odds = transduce(xf, new ReducingStepFunction<List<String>, String>() {
             @Override
             public List<String> apply(List<String> result, String input) {
                 result.add(input);
-                return null;
+                return result;
             }
         }, new ArrayList<String>(), ints(10));
 
