@@ -27,7 +27,7 @@ public class TransducersTest extends TestCase {
 
         String s = transduce(xf, new ReducingStepFunction<String, String>() {
             @Override
-            public String apply(String result, String input) {
+            public String apply(String result, String input, Reduced reduced) {
                 return result + input + " ";
             }
         }, "", ints(10));
@@ -46,7 +46,7 @@ public class TransducersTest extends TestCase {
 
         List<Integer> odds = transduce(xf, new ReducingStepFunction<ArrayList<Integer>, Integer>() {
             @Override
-            public ArrayList<Integer> apply(ArrayList<Integer> result, Integer input) {
+            public ArrayList<Integer> apply(ArrayList<Integer> result, Integer input, Reduced reduced) {
                 result.add(input);
                 return result;
             }
@@ -67,7 +67,7 @@ public class TransducersTest extends TestCase {
 
         List<Integer> vals = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
                     @Override
-                    public List<Integer> apply(List<Integer> result, Integer input) {
+                    public List<Integer> apply(List<Integer> result, Integer input, Reduced reduced) {
                         result.add(input);
                         return result;
                     }
@@ -91,7 +91,7 @@ public class TransducersTest extends TestCase {
 
         List<Character> vals = transduce(xf, new ReducingStepFunction<List<Character>, Character>() {
             @Override
-            public List<Character> apply(List<Character> result, Character input) {
+            public List<Character> apply(List<Character> result, Character input, Reduced reduced) {
                 result.add(input);
                 return result;
             }
@@ -119,7 +119,7 @@ public class TransducersTest extends TestCase {
 
         List<String> odds = transduce(xf, new ReducingStepFunction<List<String>, String>() {
             @Override
-            public List<String> apply(List<String> result, String input) {
+            public List<String> apply(List<String> result, String input, Reduced reduced) {
                 result.add(input);
                 return result;
             }
@@ -128,5 +128,36 @@ public class TransducersTest extends TestCase {
         for(String s : odds) {
             System.out.println(s);
         }
+    }
+
+    public void testTake() throws Exception {
+        Transducer<Integer, Integer> xf = take(5);
+        List<Integer> five = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, Reduced reduced) {
+                result.add(input);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(20));
+
+        System.out.println(five);
+    }
+
+    public void testTakeWhile() throws Exception {
+        Transducer<Integer, Integer> xf = takeWhile(new Predicate<Integer>() {
+            @Override
+            public boolean test(Integer integer) {
+                return integer < 10;
+            }
+        });
+        List<Integer> ten = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, Reduced reduced) {
+                result.add(input);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(20));
+
+        System.out.println(ten);
     }
 }
