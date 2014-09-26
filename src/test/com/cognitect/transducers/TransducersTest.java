@@ -78,27 +78,24 @@ public class TransducersTest extends TestCase {
 
     public void testMapcat() throws Exception {
 
-
-
-        Transducer<Integer, Iterable<Integer>> xf = mapcat(new Function<Iterable<Integer>, Iterable>() {
+        Transducer<Character, Integer> xf = mapcat(new Function<Integer, Iterable<Character>>() {
             @Override
-            public Iterable apply(Iterable<Integer> integers) {
-                return null;
+            public Iterable<Character> apply(Integer integer) {
+                final String s = integer.toString();
+                return new ArrayList<Character>(s.length()) {{
+                    for(char c : s.toCharArray())
+                    add(c);
+                }};
             }
         });
 
-        List<Iterable<Integer>> data = new ArrayList<Iterable<Integer>>() {{
-            add(ints(10));
-            add(ints(20));
-        }};
-
-        List<Integer> vals = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
+        List<Character> vals = transduce(xf, new ReducingStepFunction<List<Character>, Character>() {
             @Override
-            public List<Integer> apply(List<Integer> result, Integer input) {
+            public List<Character> apply(List<Character> result, Character input) {
                 result.add(input);
                 return result;
             }
-        }, new ArrayList<Integer>(), data);
+        }, new ArrayList<Character>(), ints(10));
 
         System.out.println("mapcat: " + vals);
     }

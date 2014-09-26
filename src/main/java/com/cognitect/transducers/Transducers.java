@@ -62,44 +62,43 @@ public class Transducers {
 
     //*** Core transducer type
 
-    public static interface Transducer<OUT, IN> {
-        <R> ReducingFunction<R, IN> apply(ReducingFunction<R, OUT> xf);
+    public static interface Transducer<B, C> {
+        <R> ReducingFunction<R, C> apply(ReducingFunction<R, B> xf);
 
-        <OUT2> Transducer<OUT2, IN> comp(Transducer<OUT2, OUT> right);
+        <A> Transducer<A, C> comp(Transducer<A, B> right);
     }
 
-    public static abstract class ATransducer<OUT, IN> implements Transducer<OUT, IN> {
+    public static abstract class ATransducer<B, C> implements Transducer<B, C> {
         @Override
-        public <OUT2> Transducer<OUT2, IN> comp(Transducer<OUT2, OUT> right) {
+        public <A> Transducer<A, C> comp(Transducer<A, B> right) {
             return compose(this, right);
         }
     }
 
     //*** composition
 
-    private static class Comp<OUT2, OUT, IN> extends ATransducer<OUT2, IN> {
+    private static class Comp<B, A, C> extends ATransducer<A, C> {
 
-        private Transducer<OUT, IN> left;
-        private Transducer<OUT2, OUT> right;
+        private Transducer<B, C> left;
+        private Transducer<A, B> right;
 
 
-        public Comp(Transducer<OUT, IN> left, Transducer<OUT2, OUT> right) {
+        public Comp(Transducer<B, C> left, Transducer<A, B> right) {
             this.left = left;
             this.right = right;
         }
 
         @Override
-        public <R> ReducingFunction<R, IN> apply(ReducingFunction<R, OUT2> xf) {
+        public <R> ReducingFunction<R, C> apply(ReducingFunction<R, A> xf) {
             return left.apply(right.apply(xf));
         }
     }
 
-    public static <OUT2, OUT, IN> Transducer<OUT2, IN> compose(Transducer<OUT, IN> left, Transducer<OUT2, OUT> right) {
-        return new Comp<OUT2, OUT, IN>(left, right);
+    public static <A, B, C> Transducer<A, C> compose(Transducer<B, C> left, Transducer<A, B> right) {
+        return new Comp<B, A, C>(left, right);
     }
 
     //*** abstract base helper types
-
 
     public static abstract class AReducingFunctionOn<R, A, B> implements ReducingFunction<R, B> {
 
@@ -122,98 +121,60 @@ public class Transducers {
 
     // *** transducers
 
-    // Function<in, out>
-    // Map<in, out>
-    // ATransducer<out, in>
-    private static class Map<IN, OUT> extends ATransducer<OUT, IN> {
-
-        Function<IN, OUT> f;
-
-        public Map(Function<IN, OUT> f) {
-            this.f = f;
-        }
-
-        @Override
-        public <R> ReducingFunction<R, IN> apply(final ReducingFunction<R, OUT> xf) {
-            return new AReducingFunctionOn<R, OUT, IN>(xf) {
-                @Override
-                public R apply(R result, IN input) {
-                    System.out.println("mapping!");
-                    return xf.apply(result, (f.apply(input)));
-                }
-            };
-        }
-    }
-
-    public static <OUT, IN> Transducer<OUT, IN> map(Function<IN, OUT> f) {
-        return new Map<IN, OUT>(f);
+    public static <A, B> Transducer<A, B> map(final Function<B, A> f) {
+        return new ATransducer<A, B>() {
+            @Override
+            public <R> ReducingFunction<R, B> apply(final ReducingFunction<R, A> xf) {
+                return new AReducingFunctionOn<R, A, B>(xf) {
+                    @Override
+                    public R apply(R result, B input) {
+                        System.out.println("mapping!");
+                        return xf.apply(result, (f.apply(input)));
+                    }
+                };
+            }
+        };
     }
 
 
-
-    private static class Filter<IN> extends ATransducer<IN, IN> {
-        Predicate<IN> p;
-
-        public Filter(Predicate<IN> p) {
-            this.p = p;
-        }
-
-        @Override
-        public <R> ReducingFunction<R, IN> apply(final ReducingFunction<R, IN> xf) {
-            return new AReducingFunctionOn<R, IN, IN>(xf) {
-                @Override
-                public R apply(R result, IN input) {
-                    System.out.println("filtering!");
-                    if (p.test(input))
-                        return xf.apply(result, input);
-                    return result;
-                }
-            };
-        }
-    }
-
-    public static <IN> Transducer<IN, IN> filter(Predicate<IN> p) {
-        return new Filter<IN>(p);
+    public static <A> Transducer<A, A> filter(final Predicate<A> p) {
+        return new ATransducer<A, A>() {
+            @Override
+            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+                return new AReducingFunctionOn<R, A, A>(xf) {
+                    @Override
+                    public R apply(R result, A input) {
+                        System.out.println("filtering!");
+                        if (p.test(input))
+                            return xf.apply(result, input);
+                        return result;
+                    }
+                };
+            }
+        };
     }
 
 
-
-    private static class Cat<IN extends Iterable<OUT>, OUT> extends ATransducer<OUT, IN> {
-
-        public Cat() {}
-
-        @Override
-        public <R> ReducingFunction<R, IN> apply(final ReducingFunction<R, OUT> xf) {
-            return new AReducingFunctionOn<R, OUT, IN>(xf) {
-                @Override
-                public R apply(R result, IN input) {
-                    System.out.println("catting!");
-                    return reduce(xf, result, input);
-                }
-            };
-        }
+    public static <A, B extends Iterable<A>> Transducer<A, B> cat() {
+        return new ATransducer<A, B>() {
+            @Override
+            public <R> ReducingFunction<R, B> apply(final ReducingFunction<R, A> xf) {
+                return new AReducingFunctionOn<R, A, B>(xf) {
+                    @Override
+                    public R apply(R result, B input) {
+                        System.out.println("catting!");
+                        return reduce(xf, result, input);
+                    }
+                };
+            }
+        };
     }
 
-    public static <OUT, IN extends Iterable<OUT>> Transducer<OUT, IN> cat() { return new Cat<IN, OUT>(); }
+    // number, string (coll of char)
+    // takes a iterable of ? and reduces it
 
-
-    public static <IN, OUT extends Iterable<OUT2>, OUT2> Transducer<OUT2, IN> mapcat(Function<IN, OUT> f) {
-        // need to store cat in a local var to get correct type params
-        // OR need to pass Class<T> argument to cat, i.e., cat(bType) where
-        // mapcat takes a second arg Class<B> btype that caller must provide
-        // OR need to cast and break typing
-        // unchecked cast required to coerce Catting<Object, Iterable<Object>
-        //return map(f).comp((Transducer<B, Iterable<B>>) cat());
-        Transducer<OUT, IN> m = map(f);
-        Transducer<OUT2, OUT> c = cat();
-        return m.comp(c);
-    }
-
-
-    public static <IN, OUT extends Iterable<OUT2>, OUT2> Transducer<OUT2, IN> mapcat2(Function<IN, OUT> f) {
-        Transducer<OUT, IN> m = map(f);
-        Transducer<OUT2, OUT> c = cat();
-        return m.comp(c);
+    public static <A, B extends Iterable<A>, C> Transducer<A, C> mapcat(Function<C, B> f) {
+        return map(f).comp(Transducers.<A, B>cat());
     }
 
 
