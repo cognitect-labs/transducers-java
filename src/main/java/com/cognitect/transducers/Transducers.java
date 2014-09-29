@@ -5,107 +5,53 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static com.cognitect.transducers.Base.*;
+
 public class Transducers {
 
-
-    // can we get rid of local in mapcat? doesn't look like it
-    // ??? make map params match function
-    // comp works right
-    // reduced short-circuit
-    // implement take
-    // implement partition
-    // comparing / testing w/ 8
-    // cleaning up experience
-
-    public static class Reduced {
-        boolean reduced = false;
-        public boolean isReduced() { return reduced; }
-        public void set() { reduced = true; }
+    public static interface IReduced {
+        boolean isReduced();
+        void set();
     }
 
-    private static <R, T> R reduce(ReducingFunction<R, T> f, R result, Iterable<T> input) {
-        return reduce(f, result, input, new Reduced());
+    public static interface IStepFunction<R, T> {
+        public R apply(R result, T input, IReduced reduced);
     }
 
-    private static <R, T> R reduce(ReducingFunction<R, T> f, R result, Iterable<T> input, Reduced reduced) {
-        R ret = result;
-        for(T t : input) {
-            ret = f.apply(ret, t, reduced);
-            if (reduced.isReduced())
-                return ret;
-        }
-        return ret;
-    }
-
-    //*** Core reducing function types
-
-    public static interface ReducingFunction<R, T> {
+    public static interface IReducingFunction<R, T> extends IStepFunction<R, T>{
         R apply();
         R apply(R result);
-        R apply(R result, T input, Reduced reduced);
     }
 
-    // Add step function
-    // and complete api
-    // that makes this thing w/ delegation
-    // returns a ReducingFunction
-    public static abstract class ReducingStepFunction<R, T> implements ReducingFunction<R, T> {
-        @Override
-        public R apply() {
-            return null;
-        }
+    public static interface ITransducer<B, C> {
+        <R> IReducingFunction<R, C> apply(IReducingFunction<R, B> xf);
 
-        @Override
-        public R apply(R result) {
-            return result;
-        }
+        <A> ITransducer<A, C> comp(ITransducer<A, B> right);
     }
 
-    //*** Core transducer type
+    //**** transducible processes
 
-    public static interface Transducer<B, C> {
-        <R> ReducingFunction<R, C> apply(ReducingFunction<R, B> xf);
-
-        <A> Transducer<A, C> comp(Transducer<A, B> right);
+    public static <R, A, B> R transduce(ITransducer<A, B> xf, IReducingFunction<R, A> builder, Iterable<B> input) {
+        return transduce(xf, builder, builder.apply(), input);
     }
 
-    public static abstract class ATransducer<B, C> implements Transducer<B, C> {
-        @Override
-        public <A> Transducer<A, C> comp(Transducer<A, B> right) {
-            return compose(this, right);
-        }
+    public static <R, A, B> R transduce(ITransducer<A, B> xf, IReducingFunction<R, A> builder, R init, Iterable<B> input) {
+        IReducingFunction<R, B> _xf = xf.apply(builder);
+        return reduce(_xf, init, input);
     }
 
-    //*** composition
+    public static <R, A, B> R transduce(ITransducer<A, B> xf, IStepFunction<R, A> builder, R init, Iterable<B> input) {
+        return transduce(xf, completing(builder), init, input);
+    }
 
-    public static <A, B, C> Transducer<A, C> compose(final Transducer<B, C> left, final Transducer<A, B> right) {
-        return new ATransducer<A, C>() {
+    public static <R extends Collection<A>, A, B> R into(R init, ITransducer<A, B> xf, Iterable<B> input) {
+        return transduce(xf, new AReducingFunction<R, A>() {
             @Override
-            public <R> ReducingFunction<R, C> apply(ReducingFunction<R, A> xf) {
-                return left.apply(right.apply(xf));
+            public R apply(R result, A input, IReduced reduced) {
+                result.add(input);
+                return result;
             }
-        };
-    }
-
-    //*** abstract base helper types
-
-    public static abstract class AReducingFunctionOn<R, A, B> implements ReducingFunction<R, B> {
-
-        ReducingFunction<R, A> xf;
-
-        public AReducingFunctionOn(ReducingFunction<R, A> xf) {
-            this.xf = xf;
-        }
-
-        @Override
-        public R apply() {
-            return xf.apply();
-        }
-
-        @Override
-        public R apply(R result) {
-            return xf.apply(result);
-        }
+        }, init, input);
     }
 
     // *** transducers
@@ -122,13 +68,13 @@ public class Transducers {
         R apply(T t, U u);
     }
 
-    public static <A, B> Transducer<A, B> map(final Function<B, A> f) {
+    public static <A, B> ITransducer<A, B> map(final Function<B, A> f) {
         return new ATransducer<A, B>() {
             @Override
-            public <R> ReducingFunction<R, B> apply(final ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, B> apply(final IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, B>(xf) {
                     @Override
-                    public R apply(R result, B input, Reduced reduced) {
+                    public R apply(R result, B input, IReduced reduced) {
                         return xf.apply(result, f.apply(input), reduced);
                     }
                 };
@@ -137,13 +83,13 @@ public class Transducers {
     }
 
 
-    public static <A> Transducer<A, A> filter(final Predicate<A> p) {
+    public static <A> ITransducer<A, A> filter(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         if (p.test(input))
                             return xf.apply(result, input, reduced);
                         return result;
@@ -154,13 +100,13 @@ public class Transducers {
     }
 
 
-    public static <A, B extends Iterable<A>> Transducer<A, B> cat() {
+    public static <A, B extends Iterable<A>> ITransducer<A, B> cat() {
         return new ATransducer<A, B>() {
             @Override
-            public <R> ReducingFunction<R, B> apply(final ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, B> apply(final IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, B>(xf) {
                     @Override
-                    public R apply(R result, B input, Reduced reduced) {
+                    public R apply(R result, B input, IReduced reduced) {
                         return reduce(xf, result, input, reduced);
                     }
                 };
@@ -168,17 +114,17 @@ public class Transducers {
         };
     }
 
-    public static <A, B extends Iterable<A>, C> Transducer<A, C> mapcat(Function<C, B> f) {
+    public static <A, B extends Iterable<A>, C> ITransducer<A, C> mapcat(Function<C, B> f) {
         return map(f).comp(Transducers.<A, B>cat());
     }
 
-    public static <A> Transducer<A, A> remove(final Predicate<A> p) {
+    public static <A> ITransducer<A, A> remove(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         if (!p.test(input))
                             return xf.apply(result, input, reduced);
                         return result;
@@ -188,14 +134,14 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> take(final long n) {
+    public static <A> ITransducer<A, A> take(final long n) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     long taken = 0;
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         R ret = result;
                         if (taken < n) {
                             ret = xf.apply(result, input, reduced);
@@ -210,13 +156,13 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> takeWhile(final Predicate<A> p) {
+    public static <A> ITransducer<A, A> takeWhile(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         R ret = result;
                         if (p.test(input)) {
                             ret = xf.apply(result, input, reduced);
@@ -230,14 +176,14 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> drop(final long n) {
+    public static <A> ITransducer<A, A> drop(final long n) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     long dropped = 0;
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         R ret = result;
                         if (dropped < n) {
                             dropped++;
@@ -251,14 +197,14 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> dropWhile(final Predicate<A> p) {
+    public static <A> ITransducer<A, A> dropWhile(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     boolean drop = true;
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         if (drop && p.test(input)) {
                             return result;
                         }
@@ -270,14 +216,14 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> takeNth(final long n) {
+    public static <A> ITransducer<A, A> takeNth(final long n) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     long nth = 0;
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         return ((++nth % n) == 0) ? xf.apply(result, input, reduced) : result;
                     }
                 };
@@ -285,7 +231,7 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> replace(final Map<A, A> smap) {
+    public static <A> ITransducer<A, A> replace(final Map<A, A> smap) {
         return map(new Function<A, A>() {
             @Override
             public A apply(A a) {
@@ -296,13 +242,13 @@ public class Transducers {
         });
     }
 
-    public static <A> Transducer<A, A> keep(final Function<A, A> f) {
+    public static <A> ITransducer<A, A> keep(final Function<A, A> f) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         A _input = f.apply(input);
                         if (_input != null)
                             return xf.apply(result, _input, reduced);
@@ -313,14 +259,14 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> keep(final BiFunction<Long, A, A> f) {
+    public static <A> ITransducer<A, A> keep(final BiFunction<Long, A, A> f) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     long n = 0;
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         n++;
                         A _input = f.apply(n, input);
                         if (_input != null)
@@ -332,14 +278,14 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> dedupe() {
+    public static <A> ITransducer<A, A> dedupe() {
         return new ATransducer<A, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(ReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     A prior = null;
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         R ret = result;
                         if (prior != input) {
                             prior = input;
@@ -352,7 +298,7 @@ public class Transducers {
         };
     }
 
-    public static <A> Transducer<A, A> randomSample(final Double prob) {
+    public static <A> ITransducer<A, A> randomSample(final Double prob) {
         return filter(new Predicate<A>() {
             @Override
             public boolean test(A a) {
@@ -361,12 +307,12 @@ public class Transducers {
         });
     }
 
-     public static <A, B> Transducer<Iterable<A>, A> partitionBy(final Function<A, B> f) {
+     public static <A, B> ITransducer<Iterable<A>, A> partitionBy(final Function<A, B> f) {
 
         return new ATransducer<Iterable<A>, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(final ReducingFunction<R, Iterable<A>> xf) {
-                return new ReducingFunction<R, A>() {
+            public <R> IReducingFunction<R, A> apply(final IReducingFunction<R, Iterable<A>> xf) {
+                return new IReducingFunction<R, A>() {
                     List<A> part = new ArrayList<A>();
                     Object mark = new Object();
                     Object prior = mark;
@@ -388,7 +334,7 @@ public class Transducers {
                     }
 
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         Object val = f.apply(input);
                         prior = val;
                         if ((prior == mark) || (prior.equals(val))) {
@@ -409,12 +355,12 @@ public class Transducers {
         };
     }
 
-    public static <A, B> Transducer<Iterable<A>, A> partitionAll(final int n) {
+    public static <A, B> ITransducer<Iterable<A>, A> partitionAll(final int n) {
 
         return new ATransducer<Iterable<A>, A>() {
             @Override
-            public <R> ReducingFunction<R, A> apply(final ReducingFunction<R, Iterable<A>> xf) {
-                return new ReducingFunction<R, A>() {
+            public <R> IReducingFunction<R, A> apply(final IReducingFunction<R, Iterable<A>> xf) {
+                return new IReducingFunction<R, A>() {
                     List<A> part = new ArrayList<A>(n);
 
                     @Override
@@ -434,7 +380,7 @@ public class Transducers {
                     }
 
                     @Override
-                    public R apply(R result, A input, Reduced reduced) {
+                    public R apply(R result, A input, IReduced reduced) {
                         part.add(input);
                         if (n == part.size()) {
                             List<A> copy = new ArrayList<A>(part);
@@ -448,29 +394,10 @@ public class Transducers {
         };
     }
 
-    /*
-partition-by
-partition-all
-     */
+    //*** composition
 
-    //**** transducible processes
-
-    public static <R, A, B> R transduce(Transducer<A, B> xf, ReducingFunction<R, A> builder, Iterable<B> input) {
-        return transduce(xf, builder, builder.apply(), input);
+    public static <A, B, C> ITransducer<A, C> compose(final ITransducer<B, C> left, final ITransducer<A, B> right) {
+        return left.comp(right);
     }
 
-    public static <R, A, B> R transduce(Transducer<A, B> xf, ReducingFunction<R, A> builder, R init, Iterable<B> input) {
-        ReducingFunction<R, B> _xf = xf.apply(builder);
-        return reduce(_xf, init, input, new Reduced());
-    }
-
-    public static <R extends Collection<A>, A, B> R into(R init, Transducer<A, B> xf, Iterable<B> input) {
-        return transduce(xf, new ReducingStepFunction<R, A>() {
-            @Override
-            public R apply(R result, A input, Reduced reduced) {
-                result.add(input);
-                return result;
-            }
-        }, init, input);
-    }
 }

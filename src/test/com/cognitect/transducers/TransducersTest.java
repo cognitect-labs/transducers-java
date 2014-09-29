@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import java.util.ArrayList;
 import java.util.List;
 
+//import static com.cognitect.transducers.Base.*;
 import static com.cognitect.transducers.Transducers.*;
 
 public class TransducersTest extends TestCase {
@@ -18,16 +19,16 @@ public class TransducersTest extends TestCase {
     }
 
     public void testMap() throws Exception {
-        Transducer<String, Integer> xf = map(new Function<Integer, String>() {
+        ITransducer<String, Integer> xf = map(new Function<Integer, String>() {
             @Override
             public String apply(Integer i) {
                 return i.toString();
             }
         });
 
-        String s = transduce(xf, new ReducingStepFunction<String, String>() {
+        String s = transduce(xf, new IStepFunction<String, String>() {
             @Override
-            public String apply(String result, String input, Reduced reduced) {
+            public String apply(String result, String input, IReduced reduced) {
                 return result + input + " ";
             }
         }, "", ints(10));
@@ -37,16 +38,16 @@ public class TransducersTest extends TestCase {
 
     public void testFilter() throws Exception {
 
-        Transducer<Integer, Integer> xf = filter(new Predicate<Integer>() {
+        ITransducer<Integer, Integer> xf = filter(new Predicate<Integer>() {
             @Override
             public boolean test(Integer integer) {
                 return integer.intValue() % 2 != 0;
             }
         });
 
-        List<Integer> odds = transduce(xf, new ReducingStepFunction<ArrayList<Integer>, Integer>() {
+        List<Integer> odds = transduce(xf, new IStepFunction<ArrayList<Integer>, Integer>() {
             @Override
-            public ArrayList<Integer> apply(ArrayList<Integer> result, Integer input, Reduced reduced) {
+            public ArrayList<Integer> apply(ArrayList<Integer> result, Integer input, IReduced reduced) {
                 result.add(input);
                 return result;
             }
@@ -59,15 +60,15 @@ public class TransducersTest extends TestCase {
     }
 
     public void testCat() throws Exception {
-        Transducer<Integer, Iterable<Integer>> xf = cat();
+        ITransducer<Integer, Iterable<Integer>> xf = cat();
         List<Iterable<Integer>> data = new ArrayList<Iterable<Integer>>() {{
             add(ints(10));
             add(ints(20));
         }};
 
-        List<Integer> vals = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
+        List<Integer> vals = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
                     @Override
-                    public List<Integer> apply(List<Integer> result, Integer input, Reduced reduced) {
+                    public List<Integer> apply(List<Integer> result, Integer input, IReduced reduced) {
                         result.add(input);
                         return result;
                     }
@@ -78,20 +79,20 @@ public class TransducersTest extends TestCase {
 
     public void testMapcat() throws Exception {
 
-        Transducer<Character, Integer> xf = mapcat(new Function<Integer, Iterable<Character>>() {
+        ITransducer<Character, Integer> xf = mapcat(new Function<Integer, Iterable<Character>>() {
             @Override
             public Iterable<Character> apply(Integer integer) {
                 final String s = integer.toString();
                 return new ArrayList<Character>(s.length()) {{
-                    for(char c : s.toCharArray())
-                    add(c);
+                    for (char c : s.toCharArray())
+                        add(c);
                 }};
             }
         });
 
-        List<Character> vals = transduce(xf, new ReducingStepFunction<List<Character>, Character>() {
+        List<Character> vals = transduce(xf, new IStepFunction<List<Character>, Character>() {
             @Override
-            public List<Character> apply(List<Character> result, Character input, Reduced reduced) {
+            public List<Character> apply(List<Character> result, Character input, IReduced reduced) {
                 result.add(input);
                 return result;
             }
@@ -101,25 +102,25 @@ public class TransducersTest extends TestCase {
     }
 
     public void testComp() throws Exception {
-        Transducer<Integer, Integer> f = filter(new Predicate<Integer>() {
+        ITransducer<Integer, Integer> f = filter(new Predicate<Integer>() {
             @Override
             public boolean test(Integer integer) {
                 return integer.intValue() % 2 != 0;
             }
         });
 
-        Transducer<String, Integer> m = map(new Function<Integer, String>() {
+        ITransducer<String, Integer> m = map(new Function<Integer, String>() {
             @Override
             public String apply(Integer i) {
                 return i.toString();
             }
         });
 
-        Transducer<String, Integer> xf = f.comp(m);
+        ITransducer<String, Integer> xf = f.comp(m);
 
-        List<String> odds = transduce(xf, new ReducingStepFunction<List<String>, String>() {
+        List<String> odds = transduce(xf, new IStepFunction<List<String>, String>() {
             @Override
-            public List<String> apply(List<String> result, String input, Reduced reduced) {
+            public List<String> apply(List<String> result, String input, IReduced reduced) {
                 result.add(input);
                 return result;
             }
@@ -131,10 +132,10 @@ public class TransducersTest extends TestCase {
     }
 
     public void testTake() throws Exception {
-        Transducer<Integer, Integer> xf = take(5);
-        List<Integer> five = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
+        ITransducer<Integer, Integer> xf = take(5);
+        List<Integer> five = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
             @Override
-            public List<Integer> apply(List<Integer> result, Integer input, Reduced reduced) {
+            public List<Integer> apply(List<Integer> result, Integer input, IReduced reduced) {
                 result.add(input);
                 return result;
             }
@@ -144,15 +145,15 @@ public class TransducersTest extends TestCase {
     }
 
     public void testTakeWhile() throws Exception {
-        Transducer<Integer, Integer> xf = takeWhile(new Predicate<Integer>() {
+        ITransducer<Integer, Integer> xf = takeWhile(new Predicate<Integer>() {
             @Override
             public boolean test(Integer integer) {
                 return integer < 10;
             }
         });
-        List<Integer> ten = transduce(xf, new ReducingStepFunction<List<Integer>, Integer>() {
+        List<Integer> ten = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
             @Override
-            public List<Integer> apply(List<Integer> result, Integer input, Reduced reduced) {
+            public List<Integer> apply(List<Integer> result, Integer input, IReduced reduced) {
                 result.add(input);
                 return result;
             }
