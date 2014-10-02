@@ -4,11 +4,13 @@ import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.cognitect.transducers.Fns.*;
 
 //import static com.cognitect.transducers.Base.*;
-import static com.cognitect.transducers.Transducers.*;
 
-public class TransducersTest extends TestCase {
+public class FnsTest extends TestCase {
 
     private List<Integer> ints(final int n) {
         return new ArrayList<Integer>(n) {{
@@ -28,7 +30,7 @@ public class TransducersTest extends TestCase {
 
         String s = transduce(xf, new IStepFunction<String, String>() {
             @Override
-            public String apply(String result, String input, IReduced reduced) {
+            public String apply(String result, String input, AtomicBoolean reduced) {
                 return result + input + " ";
             }
         }, "", ints(10));
@@ -47,7 +49,7 @@ public class TransducersTest extends TestCase {
 
         List<Integer> odds = transduce(xf, new IStepFunction<ArrayList<Integer>, Integer>() {
             @Override
-            public ArrayList<Integer> apply(ArrayList<Integer> result, Integer input, IReduced reduced) {
+            public ArrayList<Integer> apply(ArrayList<Integer> result, Integer input, AtomicBoolean reduced) {
                 result.add(input);
                 return result;
             }
@@ -68,7 +70,7 @@ public class TransducersTest extends TestCase {
 
         List<Integer> vals = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
                     @Override
-                    public List<Integer> apply(List<Integer> result, Integer input, IReduced reduced) {
+                    public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
                         result.add(input);
                         return result;
                     }
@@ -92,7 +94,7 @@ public class TransducersTest extends TestCase {
 
         List<Character> vals = transduce(xf, new IStepFunction<List<Character>, Character>() {
             @Override
-            public List<Character> apply(List<Character> result, Character input, IReduced reduced) {
+            public List<Character> apply(List<Character> result, Character input, AtomicBoolean reduced) {
                 result.add(input);
                 return result;
             }
@@ -120,7 +122,7 @@ public class TransducersTest extends TestCase {
 
         List<String> odds = transduce(xf, new IStepFunction<List<String>, String>() {
             @Override
-            public List<String> apply(List<String> result, String input, IReduced reduced) {
+            public List<String> apply(List<String> result, String input, AtomicBoolean reduced) {
                 result.add(input);
                 return result;
             }
@@ -135,7 +137,7 @@ public class TransducersTest extends TestCase {
         ITransducer<Integer, Integer> xf = take(5);
         List<Integer> five = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
             @Override
-            public List<Integer> apply(List<Integer> result, Integer input, IReduced reduced) {
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
                 result.add(input);
                 return result;
             }
@@ -153,7 +155,7 @@ public class TransducersTest extends TestCase {
         });
         List<Integer> ten = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
             @Override
-            public List<Integer> apply(List<Integer> result, Integer input, IReduced reduced) {
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
                 result.add(input);
                 return result;
             }
