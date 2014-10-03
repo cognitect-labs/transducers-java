@@ -267,24 +267,20 @@ public class FnsTest extends TestCase {
     }
 
     public void testKeep() throws Exception {
-        ITransducer<Integer, Integer> xf = keep(new Function<Integer, Integer>() {
-            @Override
-            public Integer apply(Integer integer) {
-                return (integer % 2 == 0) ? null : integer;
-            }
-        });
+        Integer[] seed = {1,2,2,3,4,5,5,5,5,5,5,5,0};
+        ITransducer<Integer, Integer> xf = dedupe();
 
-        List<Integer> odds = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
+        List<Integer> nums = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
             @Override
             public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
                 result.add(input);
                 return result;
             }
-        }, new ArrayList<Integer>(), ints(10));
+        }, new ArrayList<Integer>(), Arrays.asList(seed));
 
-        Integer[] expected = {1,3,5,7,9};
+        Integer[] expected = {1,2,3,4,5,0};
 
-        assertTrue(odds.equals(Arrays.asList(expected)));
+        assertTrue(nums.equals(Arrays.asList(expected)));
     }
 
 }
