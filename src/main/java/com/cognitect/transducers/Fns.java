@@ -432,9 +432,11 @@ public class Fns {
     }
 
     /**
-     * 
-     * @param <A>
-     * @return
+     * Creates a transducer that transforms a reducing function such that
+     * consecutive identical input values are removed, only a single value
+     * is processed.
+     * @param <A> the input type of the input and output reducing functions
+     * @return a new transducer
      */
     public static <A> ITransducer<A, A> dedupe() {
         return new ATransducer<A, A>() {
@@ -456,6 +458,13 @@ public class Fns {
         };
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function such that
+     * it has the specified probability of processing each input.
+     * @param prob the probability between expressed as a value between 0 and 1.
+     * @param <A> the input type of the input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> randomSample(final Double prob) {
         return filter(new Predicate<A>() {
             @Override
@@ -465,8 +474,19 @@ public class Fns {
         });
     }
 
-     public static <A, B> ITransducer<Iterable<A>, A> partitionBy(final Function<A, B> f) {
-
+    /**
+     * Creates a transducer that transforms a reducing function that processes
+     * iterables of input into a reducing function that processes individual inputs
+     * by gathering series of inputs for which the provided partitioning function returns
+     * the same value, only forwarding them to the next reducing function when the value
+     * the partitioning function returns for a given input is different from the value
+     * returned for the previous input.
+     * @param f the partitioning function
+     * @param <A> the input type of the input and output reducing functions
+     * @param <B> the type returned by the partitioning function
+     * @return a new transducer
+     */
+    public static <A, B> ITransducer<Iterable<A>, A> partitionBy(final Function<A, B> f) {
         return new ATransducer<Iterable<A>, A>() {
             @Override
             public <R> IReducingFunction<R, A> apply(final IReducingFunction<R, Iterable<A>> xf) {
@@ -514,7 +534,17 @@ public class Fns {
         };
     }
 
-    public static <A, B> ITransducer<Iterable<A>, A> partitionAll(final int n) {
+    /**
+     * Creates a transducer that transforms a reducing function that processes
+     * iterables of input into a reducing function that processes individual inputs
+     * by gathering series of inputs into partitions of a given size, only forwarding
+     * them to the next reducing function when enough inputs have been accrued. Processes
+     * any remaining buffered inputs when the reducing process completes.
+     * @param n the size of each partition
+     * @param <A> the input type of the input and output reducing functions
+     * @return a new transducer
+     */
+    public static <A> ITransducer<Iterable<A>, A> partitionAll(final int n) {
 
         return new ATransducer<Iterable<A>, A>() {
             @Override
