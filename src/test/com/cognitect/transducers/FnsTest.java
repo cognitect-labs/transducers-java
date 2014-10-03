@@ -238,4 +238,22 @@ public class FnsTest extends TestCase {
 
         assertTrue(ten.equals(Arrays.asList(expected)));
     }
+
+    public void testTakeNth() throws Exception {
+        ITransducer<Integer, Integer> xf = takeNth(2);
+        List<Integer> evens = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
+                result.add(input);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(10));
+
+        Integer[] expected = {0,2,4,6,8};
+        System.out.println(evens.toString());
+        assertTrue(evens.equals(Arrays.asList(expected)));
+    }
+
+    
+
 }
