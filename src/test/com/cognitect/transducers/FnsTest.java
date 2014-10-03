@@ -3,6 +3,7 @@ package com.cognitect.transducers;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -35,7 +36,29 @@ public class FnsTest extends TestCase {
             }
         }, "", ints(10));
 
-        System.out.println("map: " + s);
+        assertEquals(s, "0 1 2 3 4 5 6 7 8 9 ");
+
+        ITransducer<Integer, Integer> xn = map(new Function<Integer, Integer>() {
+            @Override
+            public Integer apply(Integer i) {
+                return i;
+            }
+        });
+
+        List<Integer> nums = transduce(xn, new IStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
+                result.add(input + 1);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(10));
+
+        assertEquals(nums.size(), 10);
+
+        for (Integer i : ints(10)) {
+            assertEquals(i+1, (int)nums.get(i));
+        }
+
     }
 
     public void testFilter() throws Exception {
