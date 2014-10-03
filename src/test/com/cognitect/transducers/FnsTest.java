@@ -3,6 +3,7 @@ package com.cognitect.transducers;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,11 +54,9 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Integer>(), ints(10));
 
-        assertEquals(nums.size(), 10);
+        Integer[] expected = {1,2,3,4,5,6,7,8,9,10};
 
-        for (Integer i : ints(10)) {
-            assertEquals(i+1, (int)nums.get(i));
-        }
+        assertTrue(nums.equals(Arrays.asList(expected)));
 
     }
 
@@ -78,11 +77,9 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Integer>(), ints(10));
 
-        assertEquals(odds.size(), 5);
+        Integer[] expected = {1,3,5,7,9};
 
-        for(int i=0, n=1; i<odds.size(); i++, n+=2) {
-            assertEquals((int)odds.get(i), n);
-        }
+        assertTrue(odds.equals(Arrays.asList(expected)));
     }
 
     public void testCat() throws Exception {
@@ -137,9 +134,9 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Character>(), ints(10));
 
-        for(int i = 0; i<vals.size(); i++) {
-            assertEquals((char)vals.get(i), Character.forDigit(i, 10));
-        }
+        Character[] expected = {'0','1','2','3','4','5','6','7','8','9'};
+
+        assertTrue(vals.equals(Arrays.asList(expected)));
     }
 
     public void testComp() throws Exception {
@@ -167,12 +164,9 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<String>(), ints(10));
 
-        assertEquals(odds.size(), 5);
+        String[] expected = {"1","3","5","7","9"};
 
-        for(int i=0, n=1; i<odds.size(); i++, n+=2) {
-            assertEquals(odds.get(i), Integer.toString(n));
-        }
-
+        assertTrue(odds.equals(Arrays.asList(expected)));
     }
 
     public void testTake() throws Exception {
@@ -185,13 +179,9 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Integer>(), ints(20));
 
-        List<Integer> nums = ints(5);
+        Integer[] expected = {0,1,2,3,4};
 
-        assertEquals(five.size(), 5);
-
-        for (int i=0; i<nums.size(); i++) {
-            assertEquals(nums.get(i), five.get(i));
-        }
+        assertTrue(five.equals(Arrays.asList(expected)));
     }
 
     public void testTakeWhile() throws Exception {
@@ -209,12 +199,8 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Integer>(), ints(20));
 
-        List<Integer> nums = ints(10);
+        Integer[] expected = {0,1,2,3,4,5,6,7,8,9};
 
-        assertEquals(ten.size(), 10);
-
-        for (int i=0; i<nums.size(); i++) {
-            assertEquals(nums.get(i), ten.get(i));
-        }
+        assertTrue(ten.equals(Arrays.asList(expected)));
     }
 }
