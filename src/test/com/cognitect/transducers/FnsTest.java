@@ -78,9 +78,10 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Integer>(), ints(10));
 
-        System.out.println("filter:");
-        for(Integer i : odds) {
-            System.out.println(i);
+        assertEquals(odds.size(), 5);
+
+        for(int i=0, n=1; i<odds.size(); i++, n+=2) {
+            assertEquals((int)odds.get(i), n);
         }
     }
 
