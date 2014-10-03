@@ -266,4 +266,25 @@ public class FnsTest extends TestCase {
         assertTrue(evens.equals(Arrays.asList(expected)));
     }
 
+    public void testKeep() throws Exception {
+        ITransducer<Integer, Integer> xf = keep(new Function<Integer, Integer>() {
+            @Override
+            public Integer apply(Integer integer) {
+                return (integer % 2 == 0) ? null : integer;
+            }
+        });
+
+        List<Integer> odds = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
+                result.add(input);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(10));
+
+        Integer[] expected = {1,3,5,7,9};
+
+        assertTrue(odds.equals(Arrays.asList(expected)));
+    }
+
 }
