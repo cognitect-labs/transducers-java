@@ -54,7 +54,7 @@ public class Impl {
         for(T t : input) {
             ret = f.apply(ret, t, reduced);
             if (reduced.get())
-                return ret;
+                break;
         }
         return f.apply(ret);
     }
