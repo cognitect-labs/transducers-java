@@ -167,9 +167,12 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<String>(), ints(10));
 
-        for(String s : odds) {
-            System.out.println(s);
+        assertEquals(odds.size(), 5);
+
+        for(int i=0, n=1; i<odds.size(); i++, n+=2) {
+            assertEquals(odds.get(i), Integer.toString(n));
         }
+
     }
 
     public void testTake() throws Exception {
