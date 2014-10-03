@@ -185,7 +185,13 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Integer>(), ints(20));
 
-        System.out.println(five);
+        List<Integer> nums = ints(5);
+
+        assertEquals(five.size(), 5);
+
+        for (int i=0; i<nums.size(); i++) {
+            assertEquals(nums.get(i), five.get(i));
+        }
     }
 
     public void testTakeWhile() throws Exception {
