@@ -111,7 +111,6 @@ public class FnsTest extends TestCase {
     }
 
     public void testMapcat() throws Exception {
-
         ITransducer<Character, Integer> xf = mapcat(new Function<Integer, Iterable<Character>>() {
             @Override
             public Iterable<Character> apply(Integer integer) {
@@ -304,7 +303,40 @@ public class FnsTest extends TestCase {
         assertTrue(nums.equals(Arrays.asList(expected)));
     }
 
-    
+    public void testPartitionBy() throws Exception {
+        Integer[] seed = {1,1,1,2,2,3,4,5,5};
+
+        ITransducer<Iterable<Integer>, Integer> xf = partitionBy(new Function<Integer, Integer>() {
+            @Override
+            public Integer apply(final Integer integer) {
+                return integer;
+            }
+        });
+
+        List<Integer> vals = transduce(xf, new IReducingFunction<List<Integer>, Iterable<Integer>>() {
+            @Override
+            public List<Integer> apply() {
+                return new ArrayList<Integer>();
+            }
+
+            @Override
+            public List<Integer> apply(List<Integer> result) {
+                return result;
+            }
+
+            @Override
+            public List<Integer> apply(List<Integer> result, Iterable<Integer> input, AtomicBoolean reduced) {
+                for(Integer i : input) {
+                    result.add(i);
+                }
+                return result;
+            }
+        }, new ArrayList<Integer>(), Arrays.asList(seed));
+
+        System.out.println(vals.toString());
+
+        //assertTrue(vals.equals(Arrays.asList(expected)));
+    }
 
 
 }
