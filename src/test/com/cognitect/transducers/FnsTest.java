@@ -137,7 +137,9 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Character>(), ints(10));
 
-        System.out.println("mapcat: " + vals);
+        for(int i = 0; i<vals.size(); i++) {
+            assertEquals((char)vals.get(i), Character.forDigit(i, 10));
+        }
     }
 
     public void testComp() throws Exception {
