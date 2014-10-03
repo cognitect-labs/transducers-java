@@ -100,7 +100,20 @@ public class FnsTest extends TestCase {
                     }
                 }, new ArrayList<Integer>(), data);
 
-        System.out.println("cat: " + vals.toString());
+        int i=0;
+        List<Integer> nums = ints(10);
+
+        for(int j=0; j<nums.size(); j++) {
+            assertEquals((int)nums.get(j), (int)vals.get(i));
+            i += 1;
+        }
+
+        nums = ints(20);
+
+        for(int j=0; j<nums.size(); j++) {
+            assertEquals((int)nums.get(j), (int)vals.get(i));
+            i += 1;
+        }
     }
 
     public void testMapcat() throws Exception {
