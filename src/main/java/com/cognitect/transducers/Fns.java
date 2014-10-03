@@ -353,7 +353,7 @@ public class Fns {
                     long nth = 0;
                     @Override
                     public R apply(R result, A input, AtomicBoolean reduced) {
-                        return ((++nth % n) == 0) ? xf.apply(result, input, reduced) : result;
+                        return ((nth++ % n) == 0) ? xf.apply(result, input, reduced) : result;
                     }
                 };
             }

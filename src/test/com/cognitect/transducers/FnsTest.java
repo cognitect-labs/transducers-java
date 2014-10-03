@@ -254,6 +254,6 @@ public class FnsTest extends TestCase {
         assertTrue(evens.equals(Arrays.asList(expected)));
     }
 
-    
+
 
 }
