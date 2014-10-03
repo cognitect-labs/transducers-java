@@ -209,6 +209,12 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Integer>(), ints(20));
 
-        System.out.println(ten);
+        List<Integer> nums = ints(10);
+
+        assertEquals(ten.size(), 10);
+
+        for (int i=0; i<nums.size(); i++) {
+            assertEquals(nums.get(i), ten.get(i));
+        }
     }
 }
