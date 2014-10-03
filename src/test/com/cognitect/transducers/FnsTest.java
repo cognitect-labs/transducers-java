@@ -203,4 +203,20 @@ public class FnsTest extends TestCase {
 
         assertTrue(ten.equals(Arrays.asList(expected)));
     }
+
+    public void testDrop() throws Exception {
+        ITransducer<Integer, Integer> xf = drop(5);
+        List<Integer> five = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
+                result.add(input);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(10));
+
+        Integer[] expected = {5,6,7,8,9};
+
+        assertTrue(five.equals(Arrays.asList(expected)));
+    }
+
 }
