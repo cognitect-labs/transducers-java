@@ -14,6 +14,18 @@
 
 package com.cognitect.transducers;
 
+/**
+ * A function of two arguments
+ * @param <T> type of first argument
+ * @param <U> type of second argument
+ * @param <R> return type
+ */
 public interface BiFunction<T, U, R> {
+    /**
+     * Invokes the function
+     * @param t first argument
+     * @param u second argument
+     * @return return value
+     */
     R apply(T t, U u);
 }

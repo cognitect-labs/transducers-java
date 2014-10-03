@@ -14,6 +14,16 @@
 
 package com.cognitect.transducers;
 
+/**
+ * A function of one argument
+ * @param <T> type of argument
+ * @param <R> return type
+ */
 public interface Function<T, R> {
+    /**
+     * Invokes the function
+     * @param t argument
+     * @return return value
+     */
     R apply(T t);
 }

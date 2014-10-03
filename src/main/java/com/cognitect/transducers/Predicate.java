@@ -14,6 +14,15 @@
 
 package com.cognitect.transducers;
 
+/**
+ * Boolean predicate of one argument
+ * @param <T> type of argument
+ */
 public interface Predicate<T> {
+    /**
+     * Invokes the predicate
+     * @param t argument
+     * @return true or false
+     */
     boolean test(T t);
 }

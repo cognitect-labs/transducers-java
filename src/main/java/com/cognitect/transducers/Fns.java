@@ -24,8 +24,18 @@ import static com.cognitect.transducers.Impl.reduce;
 
 public class Fns {
 
-    //**** Helper functions
-
+    /**
+     * Converts an step function into a complete reducing function. If passed an IReducingFunction, which
+     * is an IStepFunction, returns it; otherwise returns a new instance of IReducingFunction with a step
+     * function that forwards to the given IStepFunction, a single-arity apply method (used for completing
+     * reduction) that returns its argument (it's an identity function), and a zero-arity apply method
+     * (used for initializing a new return value for a reduction if one is not provided) that throws an
+     * IllegalStateException.
+     * @param stepFunction The step function to convert to an IReducingFunction, if it is not one already
+     * @param <R> the return type of the step function and reducing function
+     * @param <T> the input type of the step function and the reducing function
+     * @return a new reducing function, or the input step function if it is already a reducing function
+     */
     public static <R, T> IReducingFunction<R, T> completing(final IStepFunction<R, T> stepFunction) {
         if (stepFunction instanceof IReducingFunction)
             return (IReducingFunction<R, T>) stepFunction;
@@ -38,25 +48,53 @@ public class Fns {
             };
     }
 
-    public static <A, B, C> ITransducer<A, C> compose(final ITransducer<B, C> left, final ITransducer<A, B> right) {
-        return left.comp(right);
+    /**
+     * Reduces input using transformed reducing function. Transforms reducing function by applying
+     * transducer. Reducing function must implement zero-arity apply that returns initial result
+     * to start reducing process.
+     * @param xf a transducer (or composed transducers) that transforms the reducing function
+     * @param rf a reducing function
+     * @param input the input to reduce
+     * @param <R> return type
+     * @param <A> type of input expected by reducing function
+     * @param <B> type of input and type accepted by reducing function returned by transducer
+     * @return result of reducing transformed input
+     */
+    public static <R, A, B> R transduce(ITransducer<A, B> xf, IReducingFunction<R, A> rf, Iterable<B> input) {
+        IReducingFunction<R, B> _xf = xf.apply(rf);
+        return reduce(_xf, rf.apply(), input);
     }
 
-    //**** transducible processes
-
-    public static <R, A, B> R transduce(ITransducer<A, B> xf, IStepFunction<R, A> builder, Iterable<B> input) {
-        IReducingFunction<R, A> _builder = completing(builder);
-        IReducingFunction<R, B> _xf = xf.apply(_builder);
-        return reduce(_xf, _builder.apply(), input);
-    }
-
-    public static <R, A, B> R transduce(ITransducer<A, B> xf, IStepFunction<R, A> builder, R init, Iterable<B> input) {
-        IReducingFunction<R, A> _builder = completing(builder);
-        IReducingFunction<R, B> _xf = xf.apply(_builder);
+    /**
+     * Reduces input using transformed reducing function. Transforms reducing function by applying
+     * transducer. Step function is converted to reducing function if necessary. Accepts initial value
+     * for reducing process as argument.
+     * @param xf a transducer (or composed transducers) that transforms the reducing function
+     * @param rf a reducing function
+     * @param init an initial value to start reducing process
+     * @param input the input to reduce
+     * @param <R> return type
+     * @param <A> type expected by reducing function
+     * @param <B> type of input and type accepted by reducing function returned by transducer
+     * @return result of reducing transformed input
+     */
+    public static <R, A, B> R transduce(ITransducer<A, B> xf, IStepFunction<R, A> rf, R init, Iterable<B> input) {
+        IReducingFunction<R, A> _rf = completing(rf);
+        IReducingFunction<R, B> _xf = xf.apply(_rf);
         return reduce(_xf, init, input);
     }
 
-    public static <R extends Collection<A>, A, B> R into(R init, ITransducer<A, B> xf, Iterable<B> input) {
+    /**
+     * Transduces input into collection using built-in reducing function.
+     * @param xf a transducer (or composed transducers) that transforms the reducing function
+     * @param init an initial collection to start reducing process
+     * @param input the input to put into the collection
+     * @param <R> return type
+     * @param <A> type the collection contains
+     * @param <B> type of input and type accepted by reducing function returned by transducer
+     * @return
+     */
+    public static <R extends Collection<A>, A, B> R into(ITransducer<A, B> xf, R init, Iterable<B> input) {
         return transduce(xf, new AReducingFunction<R, A>() {
             @Override
             public R apply(R result, A input, AtomicBoolean reduced) {
@@ -66,9 +104,30 @@ public class Fns {
         }, init, input);
     }
 
+    /**
+     * Composes a transducer with another transducer, yielding a new transducer that
+     * @param left left hand transducer
+     * @param right right hand transducer
+     * @param <A> reducing function input type
+     * @param <B> reducing function input type
+     * @param <C> reducing function input type
+     * @return
+     */
+    public static <A, B, C> ITransducer<A, C> compose(final ITransducer<B, C> left, final ITransducer<A, B> right) {
+        return left.comp(right);
+    }
+
 
     // *** transducers
 
+    /**
+     * Creates a transducer that transforms a reducing function by applying a mapping
+     * function to each input.
+     * @param f a mapping function from one type to another (can be the same type)
+     * @param <A> input type of input reducing function
+     * @param <B> input type of output reducing function
+     * @return a new transducer
+     */
     public static <A, B> ITransducer<A, B> map(final Function<B, A> f) {
         return new ATransducer<A, B>() {
             @Override
@@ -83,7 +142,14 @@ public class Fns {
         };
     }
 
-
+    /**
+     * Creates a transducer that transforms a reducing function by applying a
+     * predicate to each input and processing only those inputs for which the
+     * predicate is true.
+     * @param p a predicate function
+     * @param <A> input type of input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> filter(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
@@ -100,7 +166,13 @@ public class Fns {
         };
     }
 
-
+    /**
+     * Creates a transducer that transforms a reducing function by accepting
+     * an iterable of the expected input type and reducing it
+     * @param <A> input type of input reducing function
+     * @param <B> input type of output reducing function
+     * @return a new transducer
+     */
     public static <A, B extends Iterable<A>> ITransducer<A, B> cat() {
         return new ATransducer<A, B>() {
             @Override
@@ -115,10 +187,28 @@ public class Fns {
         };
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function using
+     * a composition of map and cat.
+     * @param f a mapping function from one type to another (can be the same type)
+     * @param <A> input type of input reducing function
+     * @param <B> output type of output reducing function and iterable of input type
+     *           of input reducing function
+     * @param <C> input type of output reducing function
+     * @return a new transducer
+     */
     public static <A, B extends Iterable<A>, C> ITransducer<A, C> mapcat(Function<C, B> f) {
         return map(f).comp(Fns.<A, B>cat());
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function by applying a
+     * predicate to each input and not processing those inputs for which the
+     * predicate is true.
+     * @param p a predicate function
+     * @param <A> input type of input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> remove(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
@@ -135,6 +225,13 @@ public class Fns {
         };
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function such that
+     * it only processes n inputs, then the reducing process stops.
+     * @param n the number of inputs to process
+     * @param <A> input type of input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> take(final long n) {
         return new ATransducer<A, A>() {
             @Override
@@ -157,6 +254,14 @@ public class Fns {
         };
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function such that
+     * it processes inputs as long as the provided predicate returns true.
+     * If the predicate returns false, the reducing process stops.
+     * @param p a predicate used to test inputs
+     * @param <A> input type of input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> takeWhile(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
@@ -177,6 +282,13 @@ public class Fns {
         };
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function such that
+     * it skips n inputs, then processes the rest of the inputs.
+     * @param n the number of inputs to skip
+     * @param <A> input type of input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> drop(final long n) {
         return new ATransducer<A, A>() {
             @Override
@@ -198,6 +310,15 @@ public class Fns {
         };
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function such that
+     * it skips inputs as long as the provided predicate returns true.
+     * Once the predicate returns false, the rest of the inputs are
+     * processed.
+     * @param p a predicate used to test inputs
+     * @param <A> input type of input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> dropWhile(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
@@ -217,6 +338,13 @@ public class Fns {
         };
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function such that
+     * it processes every nth input.
+     * @param n The frequence of inputs to process (e.g., 3 processes every third input).
+     * @param <A> The input type of the input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> takeNth(final long n) {
         return new ATransducer<A, A>() {
             @Override
@@ -232,6 +360,14 @@ public class Fns {
         };
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function such that
+     * inputs that are keys in the provided map are replaced by the corresponding
+     * value in the map.
+     * @param smap a map of replacement values
+     * @param <A> the input type of the input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> replace(final Map<A, A> smap) {
         return map(new Function<A, A>() {
             @Override
@@ -243,6 +379,14 @@ public class Fns {
         });
     }
 
+    /**
+     * Creates a transducer that transforms a reducing function by applying a
+     * function to each input and processing the resulting value, ignoring values
+     * that are null.
+     * @param f a function for processing inputs
+     * @param <A> the input type of the input and output reducing functions
+     * @return a new transducer
+     */
     public static <A> ITransducer<A, A> keep(final Function<A, A> f) {
         return new ATransducer<A, A>() {
             @Override
@@ -260,7 +404,15 @@ public class Fns {
         };
     }
 
-    public static <A> ITransducer<A, A> keep(final BiFunction<Long, A, A> f) {
+    /**
+     * Creates a transducer that transforms a reducing function by applying a
+     * function to each input and processing the resulting value, ignoring values
+     * that are null.
+     * @param f a function for processing inputs
+     * @param <A> the input type of the input and output reducing functions
+     * @return a new transducer
+     */
+    public static <A> ITransducer<A, A> keepIndexed(final BiFunction<Long, A, A> f) {
         return new ATransducer<A, A>() {
             @Override
             public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
@@ -279,6 +431,11 @@ public class Fns {
         };
     }
 
+    /**
+     * 
+     * @param <A>
+     * @return
+     */
     public static <A> ITransducer<A, A> dedupe() {
         return new ATransducer<A, A>() {
             @Override
@@ -337,12 +494,13 @@ public class Fns {
                     @Override
                     public R apply(R result, A input, AtomicBoolean reduced) {
                         Object val = f.apply(input);
-                        prior = val;
                         if ((prior == mark) || (prior.equals(val))) {
+                            prior = val;
                             part.add(input);
                             return result;
                         } else {
                             List<A> copy = new ArrayList<A>(part);
+                            prior = val;
                             part.clear();
                             R ret = xf.apply(result, copy, reduced);
                             if (!reduced.get()) {
