@@ -2,10 +2,7 @@ package com.cognitect.transducers;
 
 import junit.framework.TestCase;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.InputMismatchException;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.cognitect.transducers.Fns.*;
@@ -250,10 +247,23 @@ public class FnsTest extends TestCase {
         }, new ArrayList<Integer>(), ints(10));
 
         Integer[] expected = {0,2,4,6,8};
-        System.out.println(evens.toString());
+
         assertTrue(evens.equals(Arrays.asList(expected)));
     }
 
+    public void testReplace() throws Exception {
+        ITransducer<Integer, Integer> xf = replace(new HashMap<Integer, Integer>() {{ put(3, 42); }});
+        List<Integer> evens = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
+                result.add(input);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(5));
 
+        Integer[] expected = {0,1,2,42,4};
+
+        assertTrue(evens.equals(Arrays.asList(expected)));
+    }
 
 }
