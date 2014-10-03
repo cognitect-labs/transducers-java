@@ -219,4 +219,23 @@ public class FnsTest extends TestCase {
         assertTrue(five.equals(Arrays.asList(expected)));
     }
 
+    public void testDropWhile() throws Exception {
+        ITransducer<Integer, Integer> xf = dropWhile(new Predicate<Integer>() {
+            @Override
+            public boolean test(Integer integer) {
+                return integer < 10;
+            }
+        });
+        List<Integer> ten = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
+                result.add(input);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(20));
+
+        Integer[] expected = {10,11,12,13,14,15,16,17,18,19};
+
+        assertTrue(ten.equals(Arrays.asList(expected)));
+    }
 }
