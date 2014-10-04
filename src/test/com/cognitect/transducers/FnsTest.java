@@ -286,6 +286,27 @@ public class FnsTest extends TestCase {
         assertTrue(odds.equals(Arrays.asList(expected)));
     }
 
+    public void testKeepIndexed() throws Exception {
+        ITransducer<Integer, Integer> xf = keepIndexed(new BiFunction<Long, Integer, Integer>() {
+            @Override
+            public Integer apply(Long idx, Integer integer) {
+                return (idx == 1l || idx == 4l) ? integer : null;
+            }
+        });
+
+        List<Integer> nums = transduce(xf, new IStepFunction<List<Integer>, Integer>() {
+            @Override
+            public List<Integer> apply(List<Integer> result, Integer input, AtomicBoolean reduced) {
+                result.add(input);
+                return result;
+            }
+        }, new ArrayList<Integer>(), ints(10));
+
+        Integer[] expected = {0,3};
+
+        assertTrue(nums.equals(Arrays.asList(expected)));
+    }
+
     public void testDedupe() throws Exception {
         Integer[] seed = {1,2,2,3,4,5,5,5,5,5,5,5,0};
         ITransducer<Integer, Integer> xf = dedupe();
