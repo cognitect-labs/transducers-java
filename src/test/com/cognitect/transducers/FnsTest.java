@@ -345,8 +345,40 @@ public class FnsTest extends TestCase {
             assertEquals(vals.get(i).size(),expected.get(i).size());
             assertTrue(vals.get(i).equals(expected.get(i)));
         }
-
     }
 
+    public void testPartitionAll() throws Exception {
+        ITransducer<Iterable<Integer>, Integer> xf = partitionAll(3);
 
+        List<List<Integer>> vals = transduce(xf, new IStepFunction<List<List<Integer>>, Iterable<Integer>>() {
+            @Override
+            public List<List<Integer>> apply(List<List<Integer>> result, Iterable<Integer> input, AtomicBoolean reduced) {
+                List<Integer> ret = new ArrayList<Integer>();
+                for (Integer i : input) {
+                    ret.add(i);
+                }
+                result.add(ret);
+                return result;
+            }
+        }, new ArrayList<List<Integer>>(), ints(10));
+
+        final Integer[] a = {0,1,2};
+        final Integer[] b = {3,4,5};
+        final Integer[] c = {6,7,8};
+        final Integer[] d = {9};
+
+        List<List<Integer>> expected = new ArrayList<List<Integer>>() {{
+            add(Arrays.asList(a));
+            add(Arrays.asList(b));
+            add(Arrays.asList(c));
+            add(Arrays.asList(d));
+        }};
+
+        assertTrue(vals.size() == 4);
+
+        for(int i=0; i<expected.size(); i++) {
+            assertEquals(vals.get(i).size(),expected.get(i).size());
+            assertTrue(vals.get(i).equals(expected.get(i)));
+        }
+    }
 }
