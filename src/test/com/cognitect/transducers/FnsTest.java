@@ -313,29 +313,39 @@ public class FnsTest extends TestCase {
             }
         });
 
-        List<Integer> vals = transduce(xf, new IReducingFunction<List<Integer>, Iterable<Integer>>() {
+        List<List<Integer>> vals = transduce(xf, new IStepFunction<List<List<Integer>>, Iterable<Integer>>() {
             @Override
-            public List<Integer> apply() {
-                return new ArrayList<Integer>();
-            }
-
-            @Override
-            public List<Integer> apply(List<Integer> result) {
-                return result;
-            }
-
-            @Override
-            public List<Integer> apply(List<Integer> result, Iterable<Integer> input, AtomicBoolean reduced) {
-                for(Integer i : input) {
-                    result.add(i);
+            public List<List<Integer>> apply(List<List<Integer>> result, Iterable<Integer> input, AtomicBoolean reduced) {
+                List<Integer> ret = new ArrayList<Integer>();
+                for (Integer i : input) {
+                    ret.add(i);
                 }
+                result.add(ret);
                 return result;
             }
-        }, new ArrayList<Integer>(), Arrays.asList(seed));
+        }, new ArrayList<List<Integer>>(), Arrays.asList(seed));
 
-        System.out.println(vals.toString());
+        final Integer[] a = {1,1,1};
+        final Integer[] b = {2,2};
+        final Integer[] c = {3};
+        final Integer[] d = {4};
+        final Integer[] e = {5,5};
 
-        //assertTrue(vals.equals(Arrays.asList(expected)));
+        List<List<Integer>> expected = new ArrayList<List<Integer>>() {{
+            add(Arrays.asList(a));
+            add(Arrays.asList(b));
+            add(Arrays.asList(c));
+            add(Arrays.asList(d));
+            add(Arrays.asList(e));
+        }};
+
+        assertTrue(vals.size() == 5);
+
+        for(int i=0; i<expected.size(); i++) {
+            assertEquals(vals.get(i).size(),expected.get(i).size());
+            assertTrue(vals.get(i).equals(expected.get(i)));
+        }
+
     }
 
 
