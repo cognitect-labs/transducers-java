@@ -30,7 +30,7 @@ public interface ITransducer<B, C> {
      *           reducing functions
      * @return The transformed reducing function
      */
-    <R> IReducingFunction<R, C> apply(IReducingFunction<R, B> xf);
+    <R> IReducingFunction<R, C> apply(IReducingFunction<R, ? super B> xf);
 
     /**
      * Composes a transducer with another transducer, yielding

@@ -131,7 +131,7 @@ public class Fns {
     public static <A, B> ITransducer<A, B> map(final Function<B, A> f) {
         return new ATransducer<A, B>() {
             @Override
-            public <R> IReducingFunction<R, B> apply(final IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, B> apply(final IReducingFunction<R,? super A> xf) {
                 return new AReducingFunctionOn<R, A, B>(xf) {
                     @Override
                     public R apply(R result, B input, AtomicBoolean reduced) {
@@ -153,7 +153,7 @@ public class Fns {
     public static <A> ITransducer<A, A> filter(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     @Override
                     public R apply(R result, A input, AtomicBoolean reduced) {
@@ -176,7 +176,7 @@ public class Fns {
     public static <A, B extends Iterable<A>> ITransducer<A, B> cat() {
         return new ATransducer<A, B>() {
             @Override
-            public <R> IReducingFunction<R, B> apply(final IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, B> apply(final IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, B>(xf) {
                     @Override
                     public R apply(R result, B input, AtomicBoolean reduced) {
@@ -212,7 +212,7 @@ public class Fns {
     public static <A> ITransducer<A, A> remove(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     @Override
                     public R apply(R result, A input, AtomicBoolean reduced) {
@@ -235,7 +235,7 @@ public class Fns {
     public static <A> ITransducer<A, A> take(final long n) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     long taken = 0;
                     @Override
@@ -265,7 +265,7 @@ public class Fns {
     public static <A> ITransducer<A, A> takeWhile(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     @Override
                     public R apply(R result, A input, AtomicBoolean reduced) {
@@ -292,7 +292,7 @@ public class Fns {
     public static <A> ITransducer<A, A> drop(final long n) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R,? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     long dropped = 0;
                     @Override
@@ -322,7 +322,7 @@ public class Fns {
     public static <A> ITransducer<A, A> dropWhile(final Predicate<A> p) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     boolean drop = true;
                     @Override
@@ -348,7 +348,7 @@ public class Fns {
     public static <A> ITransducer<A, A> takeNth(final long n) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     long nth = 0;
                     @Override
@@ -390,7 +390,7 @@ public class Fns {
     public static <A> ITransducer<A, A> keep(final Function<A, A> f) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     @Override
                     public R apply(R result, A input, AtomicBoolean reduced) {
@@ -415,7 +415,7 @@ public class Fns {
     public static <A> ITransducer<A, A> keepIndexed(final BiFunction<Long, A, A> f) {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     long n = 0;
                     @Override
@@ -441,7 +441,7 @@ public class Fns {
     public static <A> ITransducer<A, A> dedupe() {
         return new ATransducer<A, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, A> xf) {
+            public <R> IReducingFunction<R, A> apply(IReducingFunction<R, ? super A> xf) {
                 return new AReducingFunctionOn<R, A, A>(xf) {
                     A prior = null;
                     @Override
@@ -483,13 +483,13 @@ public class Fns {
      * returned for the previous input.
      * @param f the partitioning function
      * @param <A> the input type of the input and output reducing functions
-     * @param <B> the type returned by the partitioning function
+     * @param <P> the type returned by the partitioning function
      * @return a new transducer
      */
-    public static <A, B> ITransducer<Iterable<A>, A> partitionBy(final Function<A, B> f) {
+    public static <A, P> ITransducer<Iterable<A>, A> partitionBy(final Function<A, P> f) {
         return new ATransducer<Iterable<A>, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(final IReducingFunction<R, Iterable<A>> xf) {
+            public <R> IReducingFunction<R, A> apply(final IReducingFunction<R, ? super Iterable<A>> xf) {
                 return new IReducingFunction<R, A>() {
                     List<A> part = new ArrayList<A>();
                     Object mark = new Object();
@@ -513,7 +513,7 @@ public class Fns {
 
                     @Override
                     public R apply(R result, A input, AtomicBoolean reduced) {
-                        Object val = f.apply(input);
+                        P val = f.apply(input);
                         if ((prior == mark) || (prior.equals(val))) {
                             prior = val;
                             part.add(input);
@@ -548,7 +548,7 @@ public class Fns {
 
         return new ATransducer<Iterable<A>, A>() {
             @Override
-            public <R> IReducingFunction<R, A> apply(final IReducingFunction<R, Iterable<A>> xf) {
+            public <R> IReducingFunction<R, A> apply(final IReducingFunction<R, ? super Iterable<A>> xf) {
                 return new IReducingFunction<R, A>() {
                     List<A> part = new ArrayList<A>(n);
 
