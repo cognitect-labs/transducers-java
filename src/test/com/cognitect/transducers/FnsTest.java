@@ -471,8 +471,8 @@ public class FnsTest extends TestCase {
             }
         });
 
-        // Neither of these composition statements compile
-        //m.comp(f);
+        m.comp(f);
+	    //this shouldn't compile and doesn't
         //f.comp(m);
     }
 }

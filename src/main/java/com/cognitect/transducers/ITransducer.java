@@ -40,5 +40,5 @@ public interface ITransducer<B, C> {
      *           the composed transducer returns when applied
      * @return A new composite transducer
      */
-    <A> ITransducer<A, C> comp(ITransducer<A, B> right);
+    <A> ITransducer<A, C> comp(ITransducer<A, ? super B> right);
 }
