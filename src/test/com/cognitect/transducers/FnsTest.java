@@ -402,4 +402,40 @@ public class FnsTest extends TestCase {
             assertTrue(vals.get(i).equals(expected.get(i)));
         }
     }
+
+    public void testCovariance() throws Exception {
+        ITransducer<List<Integer>, Set<Integer>> m = map(new Function<Set<Integer>, List<Integer>>() {
+            @Override
+            public List<Integer> apply(Set<Integer> set) {
+                List<Integer> l = new ArrayList<Integer>(set.size());
+                for(Integer i : set) {
+                    l.add(i);
+                }
+                return l;
+            }
+        });
+
+        List<Set<Integer>> input = new ArrayList<Set<Integer>>() {{
+            add(new HashSet<Integer>() {{
+                    for(int i : ints(20)) {
+                        add(i);
+                    }
+                }});
+            add(new HashSet<Integer>() {{
+                for(int i : ints(5)) {
+                    add(i);
+                }
+            }});
+        }};
+
+        Collection<Integer> res = transduce(m, new IStepFunction<Collection<Integer>, List<Integer>>() {
+            @Override
+            public Collection<Integer> apply(Collection<Integer> result, List<Integer> input, AtomicBoolean reduced) {
+                result.add(input.size());
+                return result;
+            }
+        }, new ArrayList<Integer>(input.size()), input);
+
+        System.out.println(res);
+    }
 }

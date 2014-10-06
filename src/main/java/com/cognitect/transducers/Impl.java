@@ -32,7 +32,7 @@ public class Impl {
      * @param <T> the type of each item in input
      * @return the final reduced result
      */
-    public static <R, T> R reduce(IReducingFunction<R, T> f, R result, Iterable<T> input) {
+    public static <R, T> R reduce(IReducingFunction<R, ? super T> f, R result, Iterable<T> input) {
         return reduce(f, result, input, new AtomicBoolean());
     }
 
