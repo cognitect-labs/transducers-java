@@ -454,10 +454,10 @@ public class FnsTest extends TestCase {
             }
         }};
 
-        Collection<Number> res = transduce(m, new IStepFunction<Collection<Number>, Integer>() {
+        Collection<Number> res = transduce(m, new IStepFunction<Collection<Number>, Number>() {
             @Override
-            public Collection<Number> apply(Collection<Number> result, Integer input, AtomicBoolean reduced) {
-                result.add(input * 3);
+            public Collection<Number> apply(Collection<Number> result, Number input, AtomicBoolean reduced) {
+                result.add(input);
                 return result;
             }
         }, new ArrayList<Number>(input.size()), input);
