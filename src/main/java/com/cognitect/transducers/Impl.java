@@ -49,7 +49,7 @@ public class Impl {
      * @param <T> the type of each item in input
      * @return the final reduced result
      */
-    public static <R, T> R reduce(IReducingFunction<R, T> f, R result, Iterable<T> input, AtomicBoolean reduced) {
+    public static <R, T> R reduce(IReducingFunction<R, ? super T> f, R result, Iterable<T> input, AtomicBoolean reduced) {
         R ret = result;
         for(T t : input) {
             ret = f.apply(ret, t, reduced);
