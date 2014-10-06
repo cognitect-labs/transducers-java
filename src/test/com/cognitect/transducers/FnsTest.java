@@ -403,7 +403,7 @@ public class FnsTest extends TestCase {
         }
     }
 
-    public void testCovariance() throws Exception {
+    public void testCollectionCovariance() throws Exception {
         ITransducer<List<Integer>, Set<Integer>> m = map(new Function<Set<Integer>, List<Integer>>() {
             @Override
             public List<Integer> apply(Set<Integer> set) {
@@ -417,10 +417,10 @@ public class FnsTest extends TestCase {
 
         List<Set<Integer>> input = new ArrayList<Set<Integer>>() {{
             add(new HashSet<Integer>() {{
-                    for(int i : ints(20)) {
-                        add(i);
-                    }
-                }});
+                for (int i : ints(20)) {
+                    add(i);
+                }
+            }});
             add(new HashSet<Integer>() {{
                 for(int i : ints(5)) {
                     add(i);
@@ -437,5 +437,42 @@ public class FnsTest extends TestCase {
         }, new ArrayList<Integer>(input.size()), input);
 
         System.out.println(res);
+    }
+
+
+    public void testSimpleCovariance() throws Exception {
+        ITransducer<Integer, Integer> m = map(new Function<Integer, Integer>() {
+            @Override
+            public Integer apply(Integer i) {
+                return i * 2;
+            }
+        });
+
+        List<Integer> input = new ArrayList<Integer>() {{
+            for(int i : ints(20)) {
+                add(i);
+            }
+        }};
+
+        Collection<Number> res = transduce(m, new IStepFunction<Collection<Number>, Integer>() {
+            @Override
+            public Collection<Number> apply(Collection<Number> result, Integer input, AtomicBoolean reduced) {
+                result.add(input * 3);
+                return result;
+            }
+        }, new ArrayList<Number>(input.size()), input);
+
+        System.out.println(res);
+
+        ITransducer<Number, Number> f = filter(new Predicate<Number>() {
+            @Override
+            public boolean test(Number number) {
+                return number.doubleValue() > 10.0;
+            }
+        });
+
+        // Neither of these composition statements compile
+        //m.comp(f);
+        //f.comp(m);
     }
 }
