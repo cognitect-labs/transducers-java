@@ -36,9 +36,10 @@ public class Fns {
      * @param <T> the input type of the step function and the reducing function
      * @return a new reducing function, or the input step function if it is already a reducing function
      */
-    public static <R, T> IReducingFunction<R, T> completing(final IStepFunction<R, ? super T> stepFunction) {
+    @SuppressWarnings("unchecked")
+    public static <R, T> IReducingFunction<R, ? super T> completing(final IStepFunction<R, ? super T> stepFunction) {
         if (stepFunction instanceof IReducingFunction)
-            return (IReducingFunction<R, T>) stepFunction;
+            return (IReducingFunction<R, ? super T>) stepFunction;
         else
             return new AReducingFunction<R, T>() {
                 @Override
@@ -79,7 +80,7 @@ public class Fns {
      * @return result of reducing transformed input
      */
     public static <R, A, B> R transduce(ITransducer<A, B> xf, IStepFunction<R, ? super A> rf, R init, Iterable<B> input) {
-        IReducingFunction<R, A> _rf = completing(rf);
+        IReducingFunction<R, ? super A> _rf = completing(rf);
         IReducingFunction<R, B> _xf = xf.apply(_rf);
         return reduce(_xf, init, input);
     }
