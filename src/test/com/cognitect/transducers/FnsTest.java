@@ -425,7 +425,7 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Number>(input.size()), input);
 
-        System.out.println(res);
+        assertEquals(20, res.size());
 
         ITransducer<Number, Number> f = filter(new Predicate<Number>() {
             @Override
@@ -442,6 +442,6 @@ public class FnsTest extends TestCase {
             }
         }, new ArrayList<Number>(input.size()), input);
 
-        System.out.println(res);
+        assertEquals(14, res.size());
     }
 }
