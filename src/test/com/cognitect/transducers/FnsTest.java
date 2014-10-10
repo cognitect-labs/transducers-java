@@ -19,6 +19,14 @@ public class FnsTest extends TestCase {
         }};
     }
 
+    private List<Long> longs(final long n) {
+        return new ArrayList<Long>((int)n) {{
+            for(long i = 0l; i < n; i++) {
+                add(i);
+            }
+        }};
+    }
+
     public void testMap() throws Exception {
         ITransducer<String, Integer> xf = map(new Function<Integer, String>() {
             @Override
@@ -54,6 +62,27 @@ public class FnsTest extends TestCase {
         Integer[] expected = {1,2,3,4,5,6,7,8,9,10};
 
         assertTrue(nums.equals(Arrays.asList(expected)));
+
+        // README usage test
+        ITransducer<String, Long> stringify = map(new Function<Long, String>() {
+            @Override
+            public String apply(Long i) {
+                return i.toString();
+            }
+        });
+
+        IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, String>() {
+            @Override
+            public List<String> apply(List<String> result, String input, AtomicBoolean reduced) {
+                result.add(input);
+                return result;
+            }
+        };
+
+        List<String> sl = transduce(stringify, addString, new ArrayList<String>(), longs(10));
+
+        String[] lexpected = {"0","1","2","3","4","5","6","7","8","9"};
+        assertTrue(sl.equals(Arrays.asList(lexpected)));
 
     }
 
