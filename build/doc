@@ -8,7 +8,7 @@ echo -e "Built docs at target/site/apidocs\n"
 
 echo -e "Checking out gh-pages branch\n"
 rm -rf gh-pages
-git clone --quiet --branch=gh-pages git@github.com:cognitect/transit-java.git gh-pages > /dev/null
+git clone --quiet --branch=gh-pages git@github.com:cognitect-labs/transducers-java.git gh-pages > /dev/null
 cd gh-pages
 
 echo -e "Replacing old gh-pages content with new docs\n"

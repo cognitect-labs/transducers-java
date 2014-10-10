@@ -23,9 +23,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:git@github.com:cognitect/transit-java.git</connection>
-    <developerConnection>scm:git:git@github.com:cognitect/transit-java.git</developerConnection>
-    <url>git@github.com:cognitect/transit-java.git</url>
+    <connection>scm:git:git@github.com:cognitect/transducers-java.git</connection>
+    <developerConnection>scm:git:git@github.com:cognitect/transducers-java.git</developerConnection>
+    <url>git@github.com:cognitect/transducers-java.git</url>
   </scm>
   <dependencies>
     <dependency>
