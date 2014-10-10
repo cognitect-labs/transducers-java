@@ -18,6 +18,48 @@
 
 ## Usage
 
+TODO
+
+```java
+import static com.cognitect.transducers.Fns.*;
+```
+
+TODO
+
+# Transducing functions
+
+TODO
+
+```java
+ITransducer<String, Long> stringify = map(new Function<Long, String>() {
+    @Override
+    public String apply(Long i) {
+        return i.toString();
+    }
+});
+```
+
+TODO
+
+```java
+IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, String>() {
+    @Override
+    public List<String> apply(List<String> result, String input, AtomicBoolean reduced) {
+        result.add(input);
+        return result;
+    }
+};
+```
+
+TODO
+
+```java
+transduce(stringify, addString, new ArrayList<String>(), longs(10));
+
+//=> ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+```
+
+TODO
 
 ## Contributing 
 
