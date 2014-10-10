@@ -21,17 +21,17 @@ Also see the introductory [blog post](http://blog.cognitect.com/blog/2014/8/6/tr
 
 ## Usage
 
-Most of the 
+The `Fns` class in the `com.cognitect.transducers` package provide the available tranducing functionality.  To use this library, simple import the package as such:
 
 ```java
 import static com.cognitect.transducers.Fns.*;
 ```
 
-TODO
+All of the methods on the `Fns` class are static.
 
 # Transducing functions
 
-TODO
+A Transducer transforms a reducing function of one type into a reducing function of another (possibly the same) type.  For the sake of illustration, you can define an `com.cognitect.transducers.ITransducer` mapping instance that encapsulates an operation that takes `Long`s and converts them into `String`s:
 
 ```java
 ITransducer<String, Long> stringify = map(new Function<Long, String>() {
@@ -42,7 +42,7 @@ ITransducer<String, Long> stringify = map(new Function<Long, String>() {
 });
 ```
 
-TODO - 
+Because Transducers are agnostic to both the source of their inputs and the target of their intermediate subprocesses, you need a way to independently supply these elements for the purpose of executing an operation.  The specification of the intermediate stages is given by creating an instance of an `com.cognitect.transducers.IStepFunction`, shown below:
 
 ```java
 IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, String>() {
@@ -54,7 +54,7 @@ IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, 
 };
 ```
 
-The `addString` function supplies the knowledge of how to accumulate the result of an operation.  In this case, `addString` accepts a list and a `String` instance and adds it to the end of the list.  One of the most common ways to apply transducers is with the `com.cognitect.transducers.Fns#transduce` function, which is analogous to a standard `reduce` or `foldl` function found in many functional programming languages.  
+The `addString` function supplies the knowledge of how to accumulate the result of an operation.  In this case, `addString` accepts a list and a `String` instance and adds it to the end of the list.  One of the most common ways to apply transducers is with the `com.cognitect.transducers.Fns#transduce` method, which is analogous to a standard `reduce` or `foldl` function found in many functional programming languages.  Given the Transducer `stringify` and the step function `addString`, you can initiate the mapping process by simply providing an `ArrayList<String>` instance serving as the output target for the step function and a list of `Longs` serving as the source of data for the whole operation:
 
 ```java
 transduce(stringify, addString, new ArrayList<String>(), longs(10));
@@ -62,9 +62,11 @@ transduce(stringify, addString, new ArrayList<String>(), longs(10));
 //=> ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 ```
 
+The `longs` method is a convenience (not shown here) that returns a list of `Long` instances.
+
 ### Composing transducers
 
-TODO
+Transducers are composable, allowing you to define aggregate processes from parts.  To show this, you can define a Transducer named `filterOdds` that is meant to identify odd numbered `Longs` via the results of a `com.cognitect.transducers.Predicate` instance:
 
 ```java
 ITransducer<Long, Long> filterOdds = filter(new Predicate<Long>() {
@@ -81,7 +83,7 @@ Transducers are composed using the `com.cognitect.transducers.Fns#compose` metho
 ITransducer<String, Long> stringifyOdds = filterOdds.comp(stringify);
 ```
 
-The transducer `stringifyOdds` is a transformation stack that will be applied by a process to a series of input elements. Each function in the stack is performed before the operation it wraps.
+The transducer `stringifyOdds` is a transformation stack that will be applied by a process to a series of input elements:
 
 ```java
 transduce(stringifyOdds, addString, new ArrayList<String>(), longs(10));
@@ -89,7 +91,8 @@ transduce(stringifyOdds, addString, new ArrayList<String>(), longs(10));
 //=> ["1", "3", "5", "7", "9"]
 ```
 
-TODO
+For more examples of using Transducers, you can view the [java-transducers JavaDocs](http://cognitect-labs.github.io/transducers-java/) and the `com.cognitect.transducers.Fns` [test suite](https://github.com/cognitect-labs/transducers-java/blob/master/src/test/com/cognitect/transducers/FnsTest.java).
+
 
 ## Contributing 
 
