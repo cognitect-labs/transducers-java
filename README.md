@@ -91,7 +91,7 @@ transduce(stringifyOdds, addString, new ArrayList<String>(), longs(10));
 //=> ["1", "3", "5", "7", "9"]
 ```
 
-For more examples of using Transducers, you can view the [java-transducers JavaDocs](http://cognitect-labs.github.io/transducers-java/) and the `com.cognitect.transducers.Fns` [test suite](https://github.com/cognitect-labs/transducers-java/blob/master/src/test/com/cognitect/transducers/FnsTest.java).
+For more examples of using Transducers, you can view the [transducers-java JavaDocs](http://cognitect-labs.github.io/transducers-java/) and the `com.cognitect.transducers.Fns` [test suite](https://github.com/cognitect-labs/transducers-java/blob/master/src/test/com/cognitect/transducers/FnsTest.java).
 
 
 ## Contributing 
