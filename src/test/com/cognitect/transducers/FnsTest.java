@@ -27,6 +27,21 @@ public class FnsTest extends TestCase {
         }};
     }
 
+    private static ITransducer<String, Long> stringify = map(new Function<Long, String>() {
+        @Override
+        public String apply(Long i) {
+            return i.toString();
+        }
+    });
+
+    private static IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, String>() {
+        @Override
+        public List<String> apply(List<String> result, String input, AtomicBoolean reduced) {
+            result.add(input);
+            return result;
+        }
+    };
+
     public void testMap() throws Exception {
         ITransducer<String, Integer> xf = map(new Function<Integer, String>() {
             @Override
@@ -64,24 +79,10 @@ public class FnsTest extends TestCase {
         assertTrue(nums.equals(Arrays.asList(expected)));
 
         // README usage test
-        ITransducer<String, Long> stringify = map(new Function<Long, String>() {
-            @Override
-            public String apply(Long i) {
-                return i.toString();
-            }
-        });
-
-        IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, String>() {
-            @Override
-            public List<String> apply(List<String> result, String input, AtomicBoolean reduced) {
-                result.add(input);
-                return result;
-            }
-        };
-
         List<String> sl = transduce(stringify, addString, new ArrayList<String>(), longs(10));
 
         String[] lexpected = {"0","1","2","3","4","5","6","7","8","9"};
+
         assertTrue(sl.equals(Arrays.asList(lexpected)));
 
     }
@@ -192,6 +193,24 @@ public class FnsTest extends TestCase {
         String[] expected = {"1","3","5","7","9"};
 
         assertTrue(odds.equals(Arrays.asList(expected)));
+
+        // README Usage tests
+
+        ITransducer<Long, Long> filterOdds = filter(new Predicate<Long>() {
+            @Override
+            public boolean test(Long num) {
+                return num.longValue() % 2 != 0;
+            }
+        });
+
+        ITransducer<String, Long> stringifyOdds = filterOdds.comp(stringify);
+
+        List<String> sl = transduce(stringifyOdds, addString, new ArrayList<String>(), longs(10));
+
+        String[] lexpected = {"1","3","5","7","9"};
+
+        assertTrue(sl.equals(Arrays.asList(lexpected)));
+
     }
 
     public void testTake() throws Exception {
