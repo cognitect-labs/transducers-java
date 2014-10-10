@@ -59,6 +59,33 @@ transduce(stringify, addString, new ArrayList<String>(), longs(10));
 //=> ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 ```
 
+### Composing transducers
+
+TODO
+
+```java
+ITransducer<Long, Long> filterOdds = filter(new Predicate<Long>() {
+    @Override
+    public boolean test(Long num) {
+        return num.longValue() % 2 != 0;
+    }
+});			
+```
+
+TODO
+
+```java
+ITransducer<String, Long> stringifyOdds = filterOdds.comp(stringify);
+```
+
+TODO
+
+```java
+transduce(stringifyOdds, addString, new ArrayList<String>(), longs(10));
+
+//=> ["1", "3", "5", "7", "9"]
+```
+
 TODO
 
 ## Contributing 
