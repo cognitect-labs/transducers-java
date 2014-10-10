@@ -29,7 +29,7 @@ import static com.cognitect.transducers.Fns.*;
 
 All of the methods on the `Fns` class are static.
 
-# Transducing functions
+### Transducing functions
 
 A Transducer transforms a reducing function of one type into a reducing function of another (possibly the same) type.  For the sake of illustration, you can define an `com.cognitect.transducers.ITransducer` mapping instance that encapsulates an operation that takes `Long`s and converts them into `String`s:
 
@@ -42,7 +42,7 @@ ITransducer<String, Long> stringify = map(new Function<Long, String>() {
 });
 ```
 
-Because Transducers are agnostic to both the source of their inputs and the target of their intermediate subprocesses, you need a way to independently supply these elements for the purpose of executing an operation.  The specification of the intermediate stages is given by creating an instance of an `com.cognitect.transducers.IStepFunction`, shown below:
+Because Transducers are agnostic to both the source of their inputs and the target of their intermediate sub-processes, you need a way to independently supply these elements for the purpose of executing an operation.  The specification of the intermediate stages is given by creating an instance of an `com.cognitect.transducers.IStepFunction`, shown below:
 
 ```java
 IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, String>() {
