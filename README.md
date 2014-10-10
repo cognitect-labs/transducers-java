@@ -6,7 +6,7 @@ Also see the introductory [blog post](http://blog.cognitect.com/blog/2014/8/6/tr
 
 ## Releases and Dependency Information
 
-* Latest release: 0.1.0
+* Latest release: 0.4.67
 * [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.cognitect%22%20AND%20a%3A%22transducers-java%22)
 
 [Maven](http://maven.apache.org/) dependency information:
@@ -15,7 +15,7 @@ Also see the introductory [blog post](http://blog.cognitect.com/blog/2014/8/6/tr
 <dependency>
   <groupId>com.cognitect</groupId>
   <artifactId>transducers-java</artifactId>
-  <version>0.1.0</version>
+  <version>0.4.67</version>
 </dependency>
 ```
 
