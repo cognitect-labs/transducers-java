@@ -21,6 +21,8 @@ Also see the introductory [blog post](http://blog.cognitect.com/blog/2014/8/6/tr
 
 ## Usage
 
+* [API Docs](https://github.com/cognitect-labs/transducers-java)
+
 The `Fns` class in the `com.cognitect.transducers` package provide the available transducing functionality.  To use this library, simple import the package as such:
 
 ```java
