@@ -1,5 +1,8 @@
 # transducers-java
 
+Transducers are composable algorithmic transformations. They are independent from the context of their input and output sources and specify only the essence of the transformation in terms of an individual element. Because transducers are decoupled from input or output sources, they can be used in many different processes - collections, streams, channels, observables, etc. Transducers compose directly, without awareness of input or creation of intermediate aggregates.
+
+Also see the introductory [blog post](http://blog.cognitect.com/blog/2014/8/6/transducers-are-coming) and this [video](https://www.youtube.com/watch?v=6mTbuzafcII).
 
 ## Releases and Dependency Information
 
@@ -18,7 +21,7 @@
 
 ## Usage
 
-TODO
+Most of the 
 
 ```java
 import static com.cognitect.transducers.Fns.*;
@@ -39,7 +42,7 @@ ITransducer<String, Long> stringify = map(new Function<Long, String>() {
 });
 ```
 
-TODO
+TODO - 
 
 ```java
 IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, String>() {
@@ -51,7 +54,7 @@ IStepFunction<List<String>, String> addString = new IStepFunction<List<String>, 
 };
 ```
 
-TODO
+The `addString` function supplies the knowledge of how to accumulate the result of an operation.  In this case, `addString` accepts a list and a `String` instance and adds it to the end of the list.  One of the most common ways to apply transducers is with the `com.cognitect.transducers.Fns#transduce` function, which is analogous to a standard `reduce` or `foldl` function found in many functional programming languages.  
 
 ```java
 transduce(stringify, addString, new ArrayList<String>(), longs(10));
@@ -72,13 +75,13 @@ ITransducer<Long, Long> filterOdds = filter(new Predicate<Long>() {
 });			
 ```
 
-TODO
+Transducers are composed using the `com.cognitect.transducers.Fns#compose` method:
 
 ```java
 ITransducer<String, Long> stringifyOdds = filterOdds.comp(stringify);
 ```
 
-TODO
+The transducer `stringifyOdds` is a transformation stack that will be applied by a process to a series of input elements. Each function in the stack is performed before the operation it wraps.
 
 ```java
 transduce(stringifyOdds, addString, new ArrayList<String>(), longs(10));
