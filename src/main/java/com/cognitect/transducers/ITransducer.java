@@ -25,12 +25,12 @@ public interface ITransducer<B, C> {
     /**
      * Transforms a reducing function of B into a reducing function
      * of C.
-     * @param xf The input reducing function
+     * @param rf The input reducing function
      * @param <R> The result type of both the input and the output
      *           reducing functions
      * @return The transformed reducing function
      */
-    <R> IReducingFunction<R, C> apply(IReducingFunction<R, ? super B> xf);
+    <R> IReducingFunction<R, C> apply(IReducingFunction<R, ? super B> rf);
 
     /**
      * Composes a transducer with another transducer, yielding

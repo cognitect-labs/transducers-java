@@ -34,8 +34,8 @@ public abstract class ATransducer<B, C> implements ITransducer<B, C> {
     public <A> ITransducer<A, C> comp(final ITransducer<A, ? super B> right) {
         return new ATransducer<A, C>() {
             @Override
-            public <R> IReducingFunction<R, C> apply(IReducingFunction<R, ? super A> xf) {
-                return ATransducer.this.apply(right.apply(xf));
+            public <R> IReducingFunction<R, C> apply(IReducingFunction<R, ? super A> rf) {
+                return ATransducer.this.apply(right.apply(rf));
             }
         };
     }

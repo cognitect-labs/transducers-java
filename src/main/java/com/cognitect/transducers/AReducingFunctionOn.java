@@ -26,15 +26,15 @@ package com.cognitect.transducers;
  */
 public abstract class AReducingFunctionOn<R, A, B> implements IReducingFunction<R, B> {
 
-    protected IReducingFunction<R, ? super A> xf;
+    protected IReducingFunction<R, ? super A> rf;
 
     /**
      * Constructs a reducing function that chains to the given
      * reducing function.
-     * @param xf a reducing function to chain to
+     * @param rf a reducing function to chain to
      */
-    public AReducingFunctionOn(IReducingFunction<R, ? super A> xf) {
-        this.xf = xf;
+    public AReducingFunctionOn(IReducingFunction<R, ? super A> rf) {
+        this.rf = rf;
     }
 
     /**
@@ -43,7 +43,7 @@ public abstract class AReducingFunctionOn<R, A, B> implements IReducingFunction<
      */
     @Override
     public R apply() {
-        return xf.apply();
+        return rf.apply();
     }
 
     /**
@@ -53,6 +53,6 @@ public abstract class AReducingFunctionOn<R, A, B> implements IReducingFunction<
      */
     @Override
     public R apply(R result) {
-        return xf.apply(result);
+        return rf.apply(result);
     }
 }
