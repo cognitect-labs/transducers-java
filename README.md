@@ -1,6 +1,6 @@
 # transducers-java
 
-Transducers are composable algorithmic transformations. They are independent from the context of their input and output sources and specify only the essence of the transformation in terms of an individual element. Because transducers are decoupled from input or output sources, they can be used in many different processes - collections, streams, channels, observables, etc. Transducers compose directly, without awareness of input or creation of intermediate aggregates.
+[Transducers](http://clojure.org/transducers) are composable algorithmic transformations. They are independent from the context of their input and output sources and specify only the essence of the transformation in terms of an individual element. Because transducers are decoupled from input or output sources, they can be used in many different processes - collections, streams, channels, observables, etc. Transducers compose directly, without awareness of input or creation of intermediate aggregates.
 
 Also see the introductory [blog post](http://blog.cognitect.com/blog/2014/8/6/transducers-are-coming) and this [video](https://www.youtube.com/watch?v=6mTbuzafcII).
 
@@ -21,7 +21,7 @@ Also see the introductory [blog post](http://blog.cognitect.com/blog/2014/8/6/tr
 
 ## Usage
 
-The `Fns` class in the `com.cognitect.transducers` package provide the available tranducing functionality.  To use this library, simple import the package as such:
+The `Fns` class in the `com.cognitect.transducers` package provide the available transducing functionality.  To use this library, simple import the package as such:
 
 ```java
 import static com.cognitect.transducers.Fns.*;
