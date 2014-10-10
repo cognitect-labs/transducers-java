@@ -6,8 +6,8 @@
   <packaging>jar</packaging>
   <version>0.1.0</version>
   <name>transducers-java</name>
-  <description></description>
-  <url></url>
+  <description>Transducers for Java</description>
+  <url>http://github.com/cognitect-labs/transducers-java</url>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -23,9 +23,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:git@github.com:cognitect/transducers-java.git</connection>
-    <developerConnection>scm:git:git@github.com:cognitect/transducers-java.git</developerConnection>
-    <url>git@github.com:cognitect/transducers-java.git</url>
+    <connection>scm:git:git@github.com:cognitect-labs/transducers-java.git</connection>
+    <developerConnection>scm:git:git@github.com:cognitect-labs/transducers-java.git</developerConnection>
+    <url>git@github.com:cognitect-labs/transducers-java.git</url>
   </scm>
   <dependencies>
     <dependency>
