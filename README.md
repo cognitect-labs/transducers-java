@@ -4,7 +4,7 @@
 ## Releases and Dependency Information
 
 * Latest release: 0.1.0
-* [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.cognitect%22%20AND%20a%3A%22transit-java%22)
+* [All Released Versions](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.cognitect%22%20AND%20a%3A%22transducers-java%22)
 
 [Maven](http://maven.apache.org/) dependency information:
 
@@ -21,12 +21,10 @@
 
 ## Contributing 
 
-This library is open source, developed internally by Cognitect. We
-welcome discussions of potential problems and enhancement suggestions
-on the ???. Issues can be filed using GitHub ??? for this project.
-Because transit is incorporated into products and client projects, we
-prefer to do development internally and are not accepting pull
-requests or patches. 
+This library is open source, developed internally by Cognitect. Issues 
+can be filed using [GitHub Issues](https://github.com/cognitect-labs/transducers-java/issues).
+Because transducers-java may be incorporated into products or client projects, we
+prefer to do development internally and do not accept pull requests or patches. 
 
 ## Copyright and License
 
