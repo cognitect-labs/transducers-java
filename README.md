@@ -21,10 +21,10 @@
 
 ## Contributing 
 
-This library is open source, developed internally by Cognitect. Issues 
-can be filed using [GitHub Issues](https://github.com/cognitect-labs/transducers-java/issues).
-Because transducers-java may be incorporated into products or client projects, we
-prefer to do development internally and do not accept pull requests or patches. 
+This library is open source, developed internally by [Cognitect](http://cognitect.com). Issues can be filed using [GitHub Issues](https://github.com/cognitect-labs/transducers-java/issues).
+
+This project is provided without support or guarantee of continued development.
+Because transducers-java may be incorporated into products or client projects, we prefer to do development internally and do not accept pull requests or patches. 
 
 ## Copyright and License
 
