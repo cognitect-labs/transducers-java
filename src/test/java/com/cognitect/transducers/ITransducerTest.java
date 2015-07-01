@@ -1,34 +1,49 @@
+/*
+ * Copyright 2015 slim.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.cognitect.transducers;
 
-import junit.framework.TestCase;
-
+import static com.cognitect.transducers.ITransducer.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+import junit.framework.TestCase;
 
-import static com.cognitect.transducers.Fns.*;
-
-//import static com.cognitect.transducers.Base.*;
-
-public class FnsTest extends TestCase {
-
+/**
+ *
+ * @author slim
+ */
+public class ITransducerTest extends TestCase {
+    
     private List<Integer> ints(final int n) {
-        return new ArrayList<Integer>(n) {{
-            for(int i = 0; i < n; i++) {
-                add(i);
-            }
-        }};
+       return IntStream.range(0, n).boxed().collect(Collectors.toList());
     }
 
     public void testMap() throws Exception {
-        ITransducer<String, Integer> xf = map(i -> i.toString());
+        ITransducer<String, ? super Integer> xf = map(i -> i.toString());
 
         String s = transduce(xf, (result, input, reduced) -> result + input + " ", "", ints(10));
 
         assertEquals(s, "0 1 2 3 4 5 6 7 8 9 ");
 
-        ITransducer<Integer, Integer> xn = map(i -> i);
+        ITransducer<Integer, ? super Integer> xn = map(i -> i);
 
         List<Integer> nums = transduce(xn, (result, input, reduced) -> {
             result.add(input + 1);
@@ -43,7 +58,7 @@ public class FnsTest extends TestCase {
 
     public void testFilter() throws Exception {
 
-        ITransducer<Integer, Integer> xf = filter(integer -> integer.intValue() % 2 != 0);
+        ITransducer<Integer, Integer> xf = filter(integer -> integer % 2 != 0);
 
         List<Integer> odds = transduce(xf, (result, input, reduced) -> {
             result.add(input);
@@ -84,7 +99,7 @@ public class FnsTest extends TestCase {
     }
 
     public void testMapcat() throws Exception {
-        ITransducer<Character, Integer> xf = mapcat(integer -> {
+        ITransducer<Character, ? super Integer> xf = mapcat(integer -> {
             final String s = integer.toString();
             return new ArrayList<Character>(s.length()) {{
                 for (char c : s.toCharArray())
@@ -103,11 +118,11 @@ public class FnsTest extends TestCase {
     }
 
     public void testComp() throws Exception {
-        ITransducer<Integer, Integer> f = filter(integer -> integer.intValue() % 2 != 0);
+        ITransducer<Integer, ? super Integer> f = filter(integer -> integer % 2 != 0);
 
-        ITransducer<String, Integer> m = map(i -> i.toString());
+        ITransducer<String, ? super Integer> m = map(i -> i.toString());
 
-        ITransducer<String, Integer> xf = f.comp(m);
+        ITransducer<String, ? super Integer> xf = f.comp(m);
 
         List<String> odds = transduce(xf, (result, input, reduced) -> {
             result.add(input);
@@ -180,7 +195,7 @@ public class FnsTest extends TestCase {
     }
 
     public void testReplace() throws Exception {
-        ITransducer<Integer, Integer> xf = replace(new HashMap<Integer, Integer>() {{ put(3, 42); }});
+        ITransducer<Integer, ? super Integer> xf = replace(new HashMap<Integer, Integer>() {{ put(3, 42); }});
         List<Integer> evens = transduce(xf, (result, input, reduced) -> {
             result.add(input);
             return result;
@@ -205,7 +220,7 @@ public class FnsTest extends TestCase {
     }
 
     public void testKeepIndexed() throws Exception {
-        ITransducer<Integer, Integer> xf = keepIndexed((idx, integer) -> (idx == 1l || idx == 4l) ? integer : null);
+        ITransducer<Integer, ? super  Integer> xf = keepIndexed((idx, integer) -> (idx == 1l || idx == 4l) ? integer : null);
 
         List<Integer> nums = transduce(xf, (result, input, reduced) -> {
             result.add(input);
@@ -237,7 +252,7 @@ public class FnsTest extends TestCase {
         ITransducer<Iterable<Integer>, Integer> xf = partitionBy(integer -> integer);
 
         List<List<Integer>> vals = transduce(xf, (result, input, reduced) -> {
-            List<Integer> ret = new ArrayList<Integer>();
+            List<Integer> ret = new ArrayList<>();
             for (Integer i : input) {
                 ret.add(i);
             }
@@ -271,7 +286,7 @@ public class FnsTest extends TestCase {
         ITransducer<Iterable<Integer>, Integer> xf = partitionAll(3);
 
         List<List<Integer>> vals = transduce(xf, (result, input, reduced) -> {
-            List<Integer> ret = new ArrayList<Integer>();
+            List<Integer> ret = new ArrayList<>();
             for (Integer i : input) {
                 ret.add(i);
             }
@@ -298,4 +313,5 @@ public class FnsTest extends TestCase {
             assertTrue(vals.get(i).equals(expected.get(i)));
         }
     }
+    
 }
